@@ -2,7 +2,7 @@
  * File:   main.cpp
  * Author: adrianmo
  *
- * Created on May 16, 2014, 3:51 PM
+ * Created on May 16, 2014, 5:51 PM
  */
 
 #include <fstream>
@@ -22,10 +22,6 @@ using namespace boost;
 using namespace std;
 using boost::asio::ip::tcp;
 
-
-/*
- * 
- */
 
 char *c;
 char *start;
@@ -68,7 +64,7 @@ int main(int argc, char** argv) {
 
     namespace po = boost::program_options;
 
-    ifstream stfs("/home/adrianmo/lasi.dta", ios::in | ios::binary);
+    ifstream stfs("export.dta", ios::in | ios::binary);
     std::string stata((std::istreambuf_iterator<char>(stfs)), std::istreambuf_iterator<char>());
     state currentState = OPEN_HEADER;
     vector<StataVariables *> vList;

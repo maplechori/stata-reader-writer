@@ -1,5 +1,6 @@
 CC=g++
 CFLAGS=
+DEBUG=-g
 LDFLAGS=-lboost_system
 SOURCES=main.cpp StataBase.cpp StataHeader.cpp StataMap.cpp StataVariables.cpp
 OBJECTS=$(SOURCES:.c=.o)
@@ -9,7 +10,7 @@ all: $(SOURCES) $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS)
 	@echo 'Building target: $@. First dep: $<'
-	${CC} -o $(EXECUTABLE) $(OBJECTS) $(LDFLAGS) 
+	${CC} -o $(EXECUTABLE) $(OBJECTS) $(LDFLAGS) $(DEBUG)
 
 .c.o:
 		@echo 'Building target: $@. First dep: $<'

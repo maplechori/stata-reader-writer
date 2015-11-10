@@ -44,8 +44,8 @@ enum state {
     OPEN_VALLBL,
     OPEN_VARLBL,
     OPEN_CHARACTERISTICS,
-    OPEN_DATA
-
+    OPEN_DATA,
+    CLOSE_HEADER
 
 
 };
@@ -71,13 +71,11 @@ int main(int argc, char** argv) {
     StataHeader hdr;
 
     c = (char *) stata.c_str();
-
-
+ 
     if (!*c || *c != '<') {
         cout << "Unsupported file format" << endl;
         return 0;
     }
-
 
     advance();
 
@@ -89,7 +87,7 @@ int main(int argc, char** argv) {
 
             case OPEN_HEADER:
                 if (!strcasecmp(buffer, "<header>")) {
-                    cout << "Good, found STATA header" << endl;
+                    cout << "Seems we found a STATA header" << endl;
                     currentState = OPEN_RELEASE;
                 }
                 break;
@@ -122,9 +120,7 @@ int main(int argc, char** argv) {
 
                     currentState = OPEN_K;
                     advance();
-
                 }
-
                 break;
 
             case OPEN_K:
@@ -162,7 +158,12 @@ int main(int argc, char** argv) {
             case OPEN_LBL:
                 if (!strcasecmp(buffer, "<label>")) {
                     if (hdr.fileByteorder == LSF) {
-
+                        unsigned char x = *(unsigned char *)c;
+                        c++;
+                        cout << "Datalabel Size: " << static_cast<int>(x) << endl;
+                        strncpy(buffer, c, x);
+                        buffer[x]=0;
+                        cout << buffer << endl; 
 
                     } else {
                         // not implemented yet
@@ -220,7 +221,7 @@ int main(int argc, char** argv) {
                             unsigned short * x = (unsigned short *) c;
                             StataVariables * sta = new StataVariables();
                             sta->type = static_cast<unsigned short> (*x);
-
+                             
                             vList.push_back(sta);
                             c += 2;
                             curr++;
@@ -371,8 +372,6 @@ int main(int argc, char** argv) {
                     
                     while(!strcasecmp(buffer, "<ch>"))
                     {
-                        
-                        
                         uint32_t * sn = (uint32_t *)c;
                         
                         if (hdr.fileByteorder == MSF)
@@ -388,13 +387,7 @@ int main(int argc, char** argv) {
                         advance();                   
                     }
                         
-                   
                     currentState = OPEN_DATA;
-                    
-                    
-                    
-                           
-                    
                     
                 }
                 break;
@@ -402,18 +395,16 @@ int main(int argc, char** argv) {
                 
                 
             case OPEN_DATA:
-                
-              
-                
-                
-                
-                
-                
+                cout <<  "Lets get the data" << endl;
+                if (!strcasecmp(buffer, "<data>"))
+                {
+                    advance();
+                }
+                else
+                {
+                    cout << c << endl;
+                }
                 break;
-                
-                
-                
-                
                 
 
             default:

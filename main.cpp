@@ -6,6 +6,7 @@
  */
 
 #include <fstream>
+#include <iostream>
 #include <stdlib.h>
 #include <cstdlib>
 #include <string>
@@ -20,6 +21,7 @@
 
 using namespace boost;
 using namespace std;
+using std::cout;
 using boost::asio::ip::tcp;
 
 
@@ -94,7 +96,6 @@ int main(int argc, char** argv) {
 
             case OPEN_RELEASE:
 
-
                 if (!strcasecmp(buffer, "<release>")) {
                     strncpy(buffer, c, 3);
                     buffer[3] = 0;
@@ -105,7 +106,6 @@ int main(int argc, char** argv) {
                     advance();
                 }
                 break;
-
 
             case OPEN_BYTEORDER:
                 if (!strcasecmp(buffer, "<byteorder>")) {
@@ -161,9 +161,11 @@ int main(int argc, char** argv) {
                         unsigned char x = *(unsigned char *)c;
                         c++;
                         cout << "Datalabel Size: " << static_cast<int>(x) << endl;
-                        strncpy(buffer, c, x);
-                        buffer[x]=0;
-                        cout << buffer << endl; 
+    
+                        hdr.datalabel = new char[x + 1];
+                        strncpy(hdr.datalabel, c, x);
+                        hdr.datalabel[x]=0;
+                        cout << hdr.datalabel << endl; 
 
                     } else {
                         // not implemented yet
@@ -246,6 +248,7 @@ int main(int argc, char** argv) {
                         while (*c != '<') {
                             char buf[32];
                             strncpy(buf, c, 32);
+                            cout << "VAR: " << buf << endl;
                             vList.at(curr)->varname = buf;
                             c += 33;
                             curr++;
@@ -265,10 +268,13 @@ int main(int argc, char** argv) {
 
             case OPEN_SORTLIST:
                 if (!strcasecmp(buffer, "<sortlist>")) {
-                    c += (hdr.variables + 1) * 2;
-                    advance();
-                    currentState = OPEN_FORMATS;
+                
+                    while(*c != '<')
+                          c++;
 
+                    // Ignore the sort list
+                    currentState = OPEN_FORMATS;
+                    advance();
                 }
 
                 break;
@@ -312,8 +318,10 @@ int main(int argc, char** argv) {
                             strncpy(buf, c, 33);
 
                             if (buf[0] != 0) 
+                            {
+                                cout << "value labels: " << buf << endl;
                                 vList.at(curr)->vallbl = buf;                               
-                            
+                            }
                             c += 33;
                             curr++;
                         }
@@ -342,7 +350,7 @@ int main(int argc, char** argv) {
 
                             if (buf[0] != 0) {
                                 vList.at(curr)->varlbl = buf;
-                                cout << vList.at(curr)->varname << " " << vList.at(curr)->varlbl << endl;
+                                cout << vList.at(curr)->varname << " " << vList.at(curr)->varlbl << vList.at(curr)->format << endl;
                             } 
 
                             c += 81;
@@ -380,7 +388,7 @@ int main(int argc, char** argv) {
                         }
                    
                         c += 4;
-                        cout << c << endl;
+                        cout << "Characteristics: " << c << endl;
                         c += *sn;
                                             
                         advance();                                             
@@ -399,6 +407,39 @@ int main(int argc, char** argv) {
                 if (!strcasecmp(buffer, "<data>"))
                 {
                     advance();
+                    for (vector<StataVariables *>::iterator it = vList.begin(); it != vList.end(); ++it)
+                    {
+                        switch((*it)->type)
+                        {
+                            case ST_STRL:
+                                    cout << "STRL" << endl;
+                                    break;
+                            case ST_DOUBLE:
+                                    cout << "DOUBLE" << endl;
+                                    break;
+                            case ST_FLOAT:
+                                    cout << "FLOAT" << endl;
+                                    break;
+                            case ST_LONG:
+                                    cout << "LONG" << endl;
+                                    break;
+                            case ST_INT: 
+                                    cout << "INTEGER" << endl;
+                                    break;
+                            case ST_BYTE:
+                                    cout << "BYTE" << endl;
+                                    break;
+                            default: 
+                                    if ((*it)->type > 0 && (*it)->type <= 2045)
+                                        cout << "STRING OF LENGTH " << (*it)->type << endl;                                   
+                                    else
+                                        cout << "UNKNOWN TYPE" << endl;
+                                    break;           
+        
+                        }
+
+                        
+                    }
                 }
                 else
                 {

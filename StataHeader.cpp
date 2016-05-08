@@ -7,9 +7,7 @@
 
 #include "StataHeader.h"
 
-StataHeader::StataHeader() {
-    
-    ts = 0x0;
+StataHeader::StataHeader(): ts(0), datalabel(0) {
     
     
 }
@@ -21,5 +19,8 @@ StataHeader::~StataHeader() {
     
     if (ts)
         delete ts;
+
+    if (datalabel)
+        delete datalabel;
 }
 

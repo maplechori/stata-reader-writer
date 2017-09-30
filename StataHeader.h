@@ -7,6 +7,10 @@
 #ifndef STATAHEADER_H
 #define	STATAHEADER_H
 
+#include <string>
+
+using namespace std;
+
 #define ST_STRL   32768
 #define ST_DOUBLE 65526
 #define ST_FLOAT  65527
@@ -14,7 +18,7 @@
 #define ST_INT    65529
 #define ST_BYTE   65530
 
-enum release { R117, R115, R114,  R113, R112 };
+enum release { R119, R118, R117, R115, R114,  R113, R112 };
 enum byteOrder { LSF , MSF };
 
 class StataHeader  {
@@ -24,8 +28,8 @@ public:
     
     int variables;
     int observations;
-    char *ts;
-    char *datalabel;
+    std::string ts;
+    std::string datalabel;
     enum release fileRelease;
     enum byteOrder fileByteorder;
     

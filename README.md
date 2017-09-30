@@ -1,4 +1,4 @@
-stata-13-reader-writer
+stata-reader-writer
 ======================
 
-Program to read and write Stata 13 files
+Program to read and write Stata files

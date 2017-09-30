@@ -9,12 +9,18 @@
 #include "StataBase.h"
 
 
-StataBase::StataBase() {
+StataBase::StataBase() 
+{
+
 }
 
-StataBase::StataBase(const StataBase& orig) {
+StataBase::StataBase(const StataBase& orig) 
+{
+
 }
 
-StataBase::~StataBase() {
+StataBase::~StataBase() 
+{
+
 }
 

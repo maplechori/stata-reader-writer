@@ -52,6 +52,17 @@ enum state {
 
 };
 
+#define XML_HEADER "<header>"
+#define XML_RELEASE "<release>"
+#define XML_BYTEORDER "<byteorder>"
+#define XML_VARIABLES "<K>"
+#define XML_OBSERVATIONS "<N>"
+#define XML_LABEL "<label>"
+#define XML_TIMESTAMP "<timestamp>"
+
+#define XML_LSF "LSF"
+#define XML_MSF "MSF"
+
 void advance() {
     for (start = c; c && *c != '>'; c++);
 
@@ -88,7 +99,7 @@ int main(int argc, char** argv) {
         switch (currentState) {
 
             case OPEN_HEADER:
-                if (!strcasecmp(buffer, "<header>")) {
+                if (!strcasecmp(buffer, XML_HEADER)) {
                     cout << "Seems we found a STATA header" << endl;
                     currentState = OPEN_RELEASE;
                 }
@@ -96,7 +107,7 @@ int main(int argc, char** argv) {
 
             case OPEN_RELEASE:
 
-                if (!strcasecmp(buffer, "<release>")) {
+                if (!strcasecmp(buffer, XML_RELEASE)) {
                     strncpy(buffer, c, 3);
                     buffer[3] = 0;
                     cout << "Release: " << buffer << endl;
@@ -108,12 +119,12 @@ int main(int argc, char** argv) {
                 break;
 
             case OPEN_BYTEORDER:
-                if (!strcasecmp(buffer, "<byteorder>")) {
+                if (!strcasecmp(buffer, XML_BYTEORDER)) {
                     strncpy(buffer, c, 3);
                     buffer[3] = 0;
                     cout << "ByteOrder: " << buffer << endl;
 
-                    if (!strcasecmp(buffer, "LSF"))
+                    if (!strcasecmp(buffer, XML_LSF))
                         hdr.fileByteorder = LSF;
                     else
                         hdr.fileByteorder = MSF;
@@ -125,7 +136,7 @@ int main(int argc, char** argv) {
 
             case OPEN_K:
 
-                if (!strcasecmp(buffer, "<K>")) {
+                if (!strcasecmp(buffer, XML_VARIABLES)) {
                     if (hdr.fileByteorder == LSF) {
                         short * x = (short *) c;
                         hdr.variables = *x;
@@ -140,7 +151,7 @@ int main(int argc, char** argv) {
                 break;
 
             case OPEN_N:
-                if (!strcasecmp(buffer, "<N>")) {
+                if (!strcasecmp(buffer, XML_OBSERVATIONS)) {
                     if (hdr.fileByteorder == LSF) {
                         int * x = (int *) c;
                         hdr.observations = *x;
@@ -156,15 +167,15 @@ int main(int argc, char** argv) {
 
 
             case OPEN_LBL:
-                if (!strcasecmp(buffer, "<label>")) {
+                if (!strcasecmp(buffer, XML_LABEL)) {
                     if (hdr.fileByteorder == LSF) {
                         unsigned char x = *(unsigned char *)c;
                         c++;
                         cout << "Datalabel Size: " << static_cast<int>(x) << endl;
     
                         hdr.datalabel = new char[x + 1];
-                        strncpy(hdr.datalabel, c, x);
-                        hdr.datalabel[x]=0;
+                        hdr.datalabel = c; // , x);
+                        //hdr.datalabel[x]=0;
                         cout << hdr.datalabel << endl; 
 
                     } else {
@@ -194,10 +205,8 @@ int main(int argc, char** argv) {
                     strncpy(buffer, t + 1, i);
                     buffer[i] = 0;
                     cout << "Size: " << static_cast<int> (x) << " Timestamp: " << buffer << endl;
-
-                    hdr.ts = new char[i + 1];
-                    strncpy(hdr.ts, buffer, i);
-                    hdr.ts[i] = 0;
+                    
+		    hdr.ts.assign(buffer, i);
                     currentState = OPEN_MAP;
                     advance();
 
@@ -458,18 +467,6 @@ int main(int argc, char** argv) {
 
 
     }
-
-
-
-
-
-
-
-
-
-
-
-
 
 }
 

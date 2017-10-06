@@ -1,6 +1,7 @@
 #include "State.h"
 
 Context::Context(char * cursor) : start(0) {
+  
    this->cursor = cursor;
    this->currentState = new OpenDTA();
 }
@@ -36,14 +37,6 @@ State * OpenDTA::advanceState() {
 }
 
 // OpenHeader State 
-bool OpenHeader::check(char * buffer) {
-  
-     if (!strcasecmp(buffer, XML_OPEN_HEADER))
-          return true;
-
-     return false;
-}
-
 bool OpenHeader::process(Context & ctx)
 {
      ctx.advance();
@@ -55,17 +48,6 @@ State * OpenHeader::advanceState() {
 }
 
 // OpenRelease State
-bool OpenRelease::check(char * buffer)
-{
-     if (!strcasecmp(buffer, XML_OPEN_RELEASE))
-     {
-        cout << "Release" << endl;
-        return true;
-     }
-
-     return false;
-}
-
 State * OpenRelease::advanceState() {
   return new OpenByteOrder();
 }
@@ -77,11 +59,11 @@ bool OpenRelease::process(Context & ctx)
 
      switch(strtol(version.c_str(), NULL, 10))
      {
-	 case 117: 
+	      case 117: 
                ctx.hdr.fileRelease = R117;
                break;
 
-         default:
+        default:
                ctx.hdr.fileRelease = R117;
                break;
 
@@ -93,18 +75,6 @@ bool OpenRelease::process(Context & ctx)
 }
 
 // OpenByteOrder State
-
-bool OpenByteOrder::check(char * buffer) 
-{
-     if (!strcasecmp(buffer, XML_OPEN_BYTEORDER))
-     {
-       cout << "byteOrder" << endl;      
-       return true;
-     }
-
-    return false;
-}
-
 State * OpenByteOrder::advanceState() 
 {
   cout << "here" << endl;

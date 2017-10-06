@@ -8,6 +8,8 @@
 using namespace std;
 class Context;
 
+#define CHECK_TAG(tag) ((!strcasecmp(buffer, tag)) ? true : false) 
+
 
 class State
 {
@@ -25,7 +27,14 @@ class Context {
      StataHeader hdr;
      State * currentState;
      vector<StataVariables *> vList;
-     string getChars(int count) {  string tmp; tmp.assign(cursor, count); cursor += count; return tmp;  };
+     
+     string getChars(int count) 
+     {  
+         string tmp; 
+         tmp.assign(cursor, count); 
+         cursor += count; 
+         return tmp;  
+     };
    
    private:
      char buffer[4096];
@@ -33,45 +42,46 @@ class Context {
      char * start;
 };
 
+
 class OpenDTA : public State {
-      bool check(char * buffer) { if (!strcasecmp(buffer, XML_OPEN_FILE)) return true; else return false; };
+      bool check(char * buffer) { return CHECK_TAG(XML_OPEN_FILE); }
       State * advanceState();
       bool process(Context & ctx);
 };
 
 class OpenHeader : public State {
-       bool check(char *);
+       bool check(char * buffer) { return CHECK_TAG(XML_OPEN_HEADER); } 
        State * advanceState();    
        bool process(Context & ctx);
 };
 
 
 class OpenRelease : public State {
-       bool check(char *);
+       bool check(char * buffer) { return CHECK_TAG(XML_OPEN_RELEASE); }
        State * advanceState();
        bool process(Context & ctx);
 };
 
 class CloseRelese : public State {
-       bool check(char *);
+       bool check(char * buffer ) { return CHECK_TAG(XML_CLOSE_RELEASE); }
        State * advanceState();
        bool process(Context & ctx);
 };
 
 class OpenByteOrder : public State {
-       bool check(char *);
+       bool check(char * buffer) { return CHECK_TAG(XML_OPEN_BYTEORDER); }
        State * advanceState();
        bool process(Context & ctx);
 };
 
 class OpenK : public State {
-       bool check(char *);
+       bool check(char * buffer) { return CHECK_TAG(XML_OPEN_VARIABLES_COUNT); }
        State * advanceState();
        bool process(Context & ctx);
 };
 
 class OpenN : public State {
-       bool check(char *);
+       bool check(char * buffer) { return CHECK_TAG(XML_OPEN_OBSERVATIONS_COUNT); }
        State * advanceState();
        bool process(Context & ctx);
 };

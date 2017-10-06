@@ -38,14 +38,32 @@ enum state {
 
 };
 
-#define XML_HEADER "<header>"
-#define XML_RELEASE "<release>"
-#define XML_BYTEORDER "<byteorder>"
-#define XML_VARIABLES "<K>"
-#define XML_OBSERVATIONS "<N>"
-#define XML_LABEL "<label>"
-#define XML_TIMESTAMP "<timestamp>"
-#define XML_MAP "<map>"
+#define XML_OPEN_FILE "<stata_dta>"
+#define XML_CLOSE_FILE "</stata_dta"
+
+#define XML_OPEN_HEADER "<header>"
+#define XML_CLOSE_HEADER "</header>"
+
+#define XML_OPEN_RELEASE "<release>"
+#define XML_CLOSE_RELEASE "</release>"
+
+#define XML_OPEN_BYTEORDER "<byteorder>"
+#define XML_CLOSE_BYTEORDER "</byteorder>"
+
+#define XML_OPEN_VARIABLES_COUNT "<K>"
+#define XML_CLOSE_VARIABLES_COUNT "</K>" 
+
+#define XML_OPEN_OBSERVATIONS_COUNT "<N>"
+#define XML_CLOSE_OBSERVATIONS_COUNT "</N>"
+
+#define XML_OPEN_LABEL "<label>"
+#define XML_CLOSE_LABEL "</label>"
+
+#define XML_OPEN_TIMESTAMP "<timestamp>"
+#define XML_CLOSE_TIMESTAMP "</timestamp>"
+
+#define XML_OPEN_MAP "<map>"
+#define XML_CLOSE_MAP "</map>"
 
 #define XML_LSF "LSF"
 #define XML_MSF "MSF"

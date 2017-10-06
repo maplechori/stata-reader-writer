@@ -29,18 +29,16 @@ using boost::asio::ip::tcp;
 unsigned short ops;
 
 int main(int argc, char** argv) {
-    char *c = NULL;
     namespace po = boost::program_options;
     Context * ctx = NULL;
 
     ifstream stfs("export.dta", ios::in | ios::binary);
     std::string stata((std::istreambuf_iterator<char>(stfs)), std::istreambuf_iterator<char>());
 
-    c = (char *) stata.c_str();
-    ctx = new Context(c);
+    ctx = new Context((char *)stata.c_str());
 
-
-    
+    if (ctx != NULL)
+      ctx->advance();
 
 }
 

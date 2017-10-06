@@ -22,25 +22,37 @@ class Context {
    public: 
      Context(char * cursor);
      void advance();
+     StataHeader hdr;
+     State * currentState;
+     vector<StataVariables *> vList;
+     string getChars(int count) {  string tmp; tmp.assign(cursor, count); cursor += count; return tmp;  };
    
    private:
      char buffer[4096];
      char * cursor;
      char * start;
-     vector<StataVariables *> vList;
-     StataHeader hdr;
-     State * currentState;
-     
+};
+
+class OpenDTA : public State {
+      bool check(char * buffer) { if (!strcasecmp(buffer, XML_OPEN_FILE)) return true; else return false; };
+      State * advanceState();
+      bool process(Context & ctx);
 };
 
 class OpenHeader : public State {
        bool check(char *);
-       State * advanceState();   
+       State * advanceState();    
        bool process(Context & ctx);
 };
 
 
 class OpenRelease : public State {
+       bool check(char *);
+       State * advanceState();
+       bool process(Context & ctx);
+};
+
+class CloseRelese : public State {
        bool check(char *);
        State * advanceState();
        bool process(Context & ctx);

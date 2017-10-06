@@ -42,7 +42,7 @@ int stata_read(char * c)
         switch (currentState) {
 
             case OPEN_HEADER:
-                if (!strcasecmp(buffer, XML_HEADER)) {
+                if (!strcasecmp(buffer, XML_OPEN_HEADER)) {
                     cout << "Seems we found a STATA header" << endl;
                     currentState = OPEN_RELEASE;
                 }
@@ -50,7 +50,7 @@ int stata_read(char * c)
 
             case OPEN_RELEASE:
 
-                if (!strcasecmp(buffer, XML_RELEASE)) {
+                if (!strcasecmp(buffer, XML_OPEN_RELEASE)) {
                     strncpy(buffer, c, 3);
                     buffer[3] = 0;
                     cout << "Release: " << buffer << endl;
@@ -62,7 +62,7 @@ int stata_read(char * c)
                 break;
 
             case OPEN_BYTEORDER:
-                if (!strcasecmp(buffer, XML_BYTEORDER)) {
+                if (!strcasecmp(buffer, XML_OPEN_BYTEORDER)) {
                     strncpy(buffer, c, 3);
                     buffer[3] = 0;
                     cout << "ByteOrder: " << buffer << endl;
@@ -80,7 +80,7 @@ int stata_read(char * c)
 
             case OPEN_K:
 
-                if (!strcasecmp(buffer, XML_VARIABLES)) {
+                if (!strcasecmp(buffer, XML_OPEN_VARIABLES_COUNT)) {
                     if (hdr.fileByteorder == LSF) {
                         short * x = (short *) c;
                         hdr.variables = *x;
@@ -95,7 +95,7 @@ int stata_read(char * c)
                 break;
 
             case OPEN_N:
-                if (!strcasecmp(buffer, XML_OBSERVATIONS)) {
+                if (!strcasecmp(buffer, XML_OPEN_OBSERVATIONS_COUNT)) {
                     if (hdr.fileByteorder == LSF) {
                         int * x = (int *) c;
                         hdr.observations = *x;
@@ -110,7 +110,7 @@ int stata_read(char * c)
                 break;
             case OPEN_LBL:
 
-                if (!strcasecmp(buffer, XML_LABEL))
+                if (!strcasecmp(buffer, XML_OPEN_LABEL))
                 {
                     if (hdr.fileByteorder == LSF)
                     {
@@ -139,7 +139,7 @@ int stata_read(char * c)
 
             case OPEN_TS:
 
-                if (!strcasecmp(buffer, XML_TIMESTAMP)) {
+                if (!strcasecmp(buffer, XML_OPEN_TIMESTAMP)) {
                     char *t = c;
                     int i = 0;
 
@@ -160,7 +160,7 @@ int stata_read(char * c)
                 break;
 
             case OPEN_MAP:
-                if (!strcasecmp(buffer, XML_MAP)) {
+                if (!strcasecmp(buffer, XML_OPEN_MAP)) {
                     // Map Size is 14 * 8 bytes
                     c += (14 * 8);
                 }

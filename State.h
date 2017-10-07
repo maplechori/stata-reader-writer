@@ -6,10 +6,10 @@
 #include <string.h>
 
 using namespace std;
+
 class Context;
 
 #define CHECK_TAG(tag) ((!strcasecmp(buffer, tag)) ? true : false) 
-
 
 class State
 {
@@ -45,13 +45,13 @@ class Context {
 
 class OpenDTA : public State {
       bool check(char * buffer) { return CHECK_TAG(XML_OPEN_FILE); }
-      State * advanceState() { return new OpenHeader(); }
+      State * advanceState();
       bool process(Context & ctx);
 };
 
 class OpenHeader : public State {
        bool check(char * buffer) { return CHECK_TAG(XML_OPEN_HEADER); } 
-       State * advanceState() { return new OpenRelease(); }    
+       State * advanceState(); 
        bool process(Context & ctx);
 };
 
@@ -105,51 +105,56 @@ class OpenMap : public State {
 };
 
 class OpenVarTypes : public State {
-       bool check(char * buffer) { }
+       bool check(char * buffer) { return CHECK_TAG(XML_OPEN_VARIABLE_TYPES); }
        State * advanceState();
        bool process(Context & ctx);
 };
 
 class OpenVarNames : public State {
-       bool check(char *);
+       bool check(char * buffer) { return CHECK_TAG(XML_OPEN_VARNAMES); }
        State * advanceState();
        bool process(Context & ctx);
 };
 
 class OpenSortList : public State {
-       bool check(char *);
+       bool check(char * buffer) { return CHECK_TAG(XML_OPEN_SORTLIST); }
        State * advanceState();
        bool process(Context & ctx);
 };
 
 class OpenFormats : public State {
-       bool check(char *);
+       bool check(char * buffer) { return CHECK_TAG(XML_OPEN_FORMATS); }
        State * advanceState();
        bool process(Context & ctx);
 };
 
-class OpenValueLabels : public State {
-       bool check(char *);
+class OpenValueLabelNames : public State {
+       bool check(char * buffer) { return CHECK_TAG(XML_OPEN_VALUE_LABEL_NAMES); }
        State * advanceState();
        bool process(Context & ctx);
 };
 
 class OpenVariableLabels : public State {
-       bool check(char *);
+       bool check(char * buffer) { return CHECK_TAG(XML_OPEN_VARIABLE_LABELS); }
        State * advanceState();
        bool process(Context & ctx);
 };
 
 class OpenCharacteristics : public State {
-       bool check(char *);
+       bool check(char * buffer) { return CHECK_TAG(XML_OPEN_CHARACTERISTICS); }
        State * advanceState();
        bool process(Context & ctx);
 };
 
 class OpenData : public State {
-       bool check(char *);
+       bool check(char * buffer) { return CHECK_TAG(XML_OPEN_DATA); }
        State * advanceState();
        bool process(Context & ctx);
 };
 
+class OpenValueLabel : public State {
+  bool check(char * buffer) { return CHECK_TAG(XML_OPEN_VALUE_LABELS); }
+  State * advanceState();
+  bool process(Context & ctx);
+};
 

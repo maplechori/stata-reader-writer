@@ -39,7 +39,7 @@ enum state {
 };
 
 #define XML_OPEN_FILE "<stata_dta>"
-#define XML_CLOSE_FILE "</stata_dta"
+#define XML_CLOSE_FILE "</stata_dta>"
 
 #define XML_OPEN_HEADER "<header>"
 #define XML_CLOSE_HEADER "</header>"
@@ -68,7 +68,35 @@ enum state {
 #define XML_LSF "LSF"
 #define XML_MSF "MSF"
 
+#define XML_OPEN_VARIABLE_TYPES "<variable_types>"
+#define XML_CLOSE_VARIABLE_TYPES "</variable_types>"
 
+#define XML_OPEN_VARNAMES "<varnames>"
+#define XML_CLOSE_VARNAMES "</varnames>"
+
+#define XML_OPEN_SORTLIST "<sortlist>"
+#define XML_CLOSE_SORTLIST "</sortlist>"
+
+#define XML_OPEN_FORMATS "<formats>"
+#define XML_CLOSE_FORMATS "</formats>"
+
+#define XML_OPEN_VALUE_LABEL_NAMES "<value_label_names>"
+#define XML_CLOSE_VALUE_LABEL_NAMES "</value_label_names>"
+
+#define XML_OPEN_VARIABLE_LABELS "<variable_labels>"
+#define XML_CLOSE_VARIABLE_LABELS "</variable_labels>"
+
+#define XML_OPEN_CHARACTERISTICS "<characteristics>"
+#define XML_CLOSE_CHARACTERISTICS "</characteristics>"
+
+#define XML_OPEN_DATA "<data>"
+#define XML_CLOSE_DATA "</data>"
+
+#define XML_OPEN_STRLS "<strls>"
+#define XML_CLOSE_STRLS "</strls>"
+
+#define XML_OPEN_VALUE_LABELS "<value_labels>"
+#define XML_CLOSE_VALUE_LABELS "</value_labels>"
 
 #endif
 

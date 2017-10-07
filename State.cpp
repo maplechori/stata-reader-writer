@@ -1,7 +1,7 @@
 #include "State.h"
 
 Context::Context(char * cursor) : start(0) {
-  
+
    this->cursor = cursor;
    this->currentState = new OpenDTA();
 }
@@ -31,20 +31,11 @@ bool OpenDTA::process(Context & ctx)
    return true;
 }
 
-
-State * OpenDTA::advanceState() {
-    return new OpenHeader();
-}
-
 // OpenHeader State 
 bool OpenHeader::process(Context & ctx)
 {
      ctx.advance();
      return true;
-}
-
-State * OpenHeader::advanceState() {
-      return new OpenRelease();
 }
 
 // OpenRelease State

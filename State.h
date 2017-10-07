@@ -27,7 +27,7 @@ class Context {
      StataHeader hdr;
      State * currentState;
      vector<StataVariables *> vList;
-     
+
      string getChars(int count) 
      {  
          string tmp; 
@@ -45,13 +45,13 @@ class Context {
 
 class OpenDTA : public State {
       bool check(char * buffer) { return CHECK_TAG(XML_OPEN_FILE); }
-      State * advanceState();
+      State * advanceState() { return new OpenHeader(); }
       bool process(Context & ctx);
 };
 
 class OpenHeader : public State {
        bool check(char * buffer) { return CHECK_TAG(XML_OPEN_HEADER); } 
-       State * advanceState();    
+       State * advanceState() { return new OpenRelease(); }    
        bool process(Context & ctx);
 };
 
@@ -87,25 +87,25 @@ class OpenN : public State {
 };
 
 class OpenLabel : public State {
-       bool check(char *);
+       bool check(char * buffer) { return CHECK_TAG(XML_OPEN_LABEL); }
        State * advanceState();
        bool process(Context & ctx);
 };
 
 class OpenTimeStamp : public State {
-       bool check(char *);
+       bool check(char * buffer) { return CHECK_TAG(XML_OPEN_TIMESTAMP); }
        State * advanceState();
        bool process(Context & ctx);
 };
 
 class OpenMap : public State {
-       bool check(char *);
+       bool check(char * buffer) { return CHECK_TAG(XML_OPEN_MAP); }
        State * advanceState();
        bool process(Context & ctx);
 };
 
 class OpenVarTypes : public State {
-       bool check(char *);
+       bool check(char * buffer) { }
        State * advanceState();
        bool process(Context & ctx);
 };

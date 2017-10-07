@@ -81,8 +81,6 @@ bool OpenByteOrder::process(Context & ctx)
 {
       string byteOrder = ctx.getChars(3);
 
-      cout << byteOrder << " Val" << endl;
-
       if (!strcasecmp(byteOrder.c_str(), XML_LSF))
         ctx.hdr.fileByteorder = MSF;
       else
@@ -91,18 +89,27 @@ bool OpenByteOrder::process(Context & ctx)
       ctx.advance(); // ORDER 
       ctx.advance(); // </byteorder>
       
-      cout << "byteOrder: " << ctx.hdr.fileByteorder << endl;
-
       return true;
 }
 
 // OpenK State
 State * OpenK::advanceState()
 {
-  return NULL;
+  return new OpenN();
 }
 
 bool OpenK::process(Context & ctx)
+{
+  return true;
+}
+
+// OpenN State
+State * OpenN::advanceState()
+{
+  return NULL;
+}
+
+bool OpenN::process(Context & ctx)
 {
   return true;
 }

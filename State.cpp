@@ -5,7 +5,7 @@ Context::Context(char * cursor) : start(0) {
    this->currentState = new OpenDTA();
 }
 
-void Context::advance() {
+void * Context::advance() {
 
     for (start = cursor; cursor && *cursor != '>'; cursor++);
 
@@ -20,6 +20,8 @@ void Context::advance() {
         currentState->process(*this);
         this->currentState = this->currentState->advanceState();
     }
+
+    return (void *)(start);
 }
 
 // OpenDTA State
@@ -53,7 +55,7 @@ State * OpenRelease::advanceState() {
 bool OpenRelease::process(Context & ctx)
 {
      string version = ctx.getChars(3);
-
+     cout << version << endl;
      switch(strtol(version.c_str(), NULL, 10))
      {
 	      case 117: 
@@ -80,11 +82,11 @@ State * OpenByteOrder::advanceState()
 bool OpenByteOrder::process(Context & ctx) 
 {
       string byteOrder = ctx.getChars(3);
-
+ 
       if (!strcasecmp(byteOrder.c_str(), XML_LSF))
-        ctx.hdr.fileByteorder = MSF;
-      else
         ctx.hdr.fileByteorder = LSF;
+      else
+        ctx.hdr.fileByteorder = MSF;
      
       ctx.advance(); // ORDER 
       ctx.advance(); // </byteorder>
@@ -100,7 +102,37 @@ State * OpenK::advanceState()
 
 bool OpenK::process(Context & ctx)
 {
-  return true;
+    if (ctx.hdr.fileByteorder == LSF) {
+        char * ctxbuf = (char *) ctx.advance();
+       
+        switch(ctx.hdr.fileRelease)
+        {
+          case R119:
+          case R118:
+                ctx.hdr.variables = (int)((ctxbuf[0] & 0xFF) | 
+                                        ((ctxbuf[1] >> 8) & 0xFF) |
+                                        ((ctxbuf[2] >> 16) & 0xFF) |
+                                        ((ctxbuf[3] >> 24) & 0xFF));
+                break;
+          case R117:
+               ctx.hdr.variables = (int)((ctxbuf[0] & 0xFF) | ((ctxbuf[1] >> 8)& 0xFF));
+               break;
+
+          default: 
+
+                break;
+        }
+        cout << "Variables: " << ctx.hdr.variables << endl;
+
+        
+
+    } else {
+         // not implemented yet
+    } 
+
+    ctx.advance();
+
+    return true;
 }
 
 // OpenN State

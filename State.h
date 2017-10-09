@@ -23,7 +23,7 @@ class Context {
    
    public: 
      Context(char * cursor);
-     void advance();
+     void * advance();
      StataHeader hdr;
      State * currentState;
      vector<StataVariables *> vList;

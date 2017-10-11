@@ -8,6 +8,7 @@
 #define	STATAHEADER_H
 
 #include <string>
+#include <stdint.h>
 
 using namespace std;
 
@@ -27,7 +28,7 @@ public:
     StataHeader(const StataHeader& orig);
     
     int variables;
-    int observations;
+    uint64_t observations;
     std::string ts;
     std::string datalabel;
     enum release fileRelease;

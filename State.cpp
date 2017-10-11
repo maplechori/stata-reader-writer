@@ -107,6 +107,7 @@ bool OpenK::process(Context & ctx)
        
         switch(ctx.hdr.fileRelease)
         {
+          // 4 byte
           case R119:
           case R118:
                 ctx.hdr.variables = (int)((ctxbuf[0] & 0xFF) | 
@@ -114,6 +115,8 @@ bool OpenK::process(Context & ctx)
                                         ((ctxbuf[2] >> 16) & 0xFF) |
                                         ((ctxbuf[3] >> 24) & 0xFF));
                 break;
+
+          // 2 byte
           case R117:
                ctx.hdr.variables = (int)((ctxbuf[0] & 0xFF) | ((ctxbuf[1] >> 8)& 0xFF));
                break;
@@ -122,12 +125,9 @@ bool OpenK::process(Context & ctx)
 
                 break;
         }
-        cout << "Variables: " << ctx.hdr.variables << endl;
-
-        
 
     } else {
-         // not implemented yet
+         // MSF not implemented yet
     } 
 
     ctx.advance();
@@ -138,10 +138,61 @@ bool OpenK::process(Context & ctx)
 // OpenN State
 State * OpenN::advanceState()
 {
-  return NULL;
+  return new OpenLabel();
 }
 
 bool OpenN::process(Context & ctx)
 {
+    char * ctxbuf = (char *) ctx.advance();
+    
+    if (ctx.hdr.fileByteorder == LSF) 
+    {
+
+      switch(ctx.hdr.fileRelease)
+      {
+        
+        // 8 byte
+
+        case R119:
+        case R118:
+
+              break;
+        
+        // 4 byte
+        case R117:
+            ctx.hdr.observations =  ((ctxbuf[0] & 0xFF) | 
+                                    ((ctxbuf[1] >> 8)  & 0xFF) |
+                                    ((ctxbuf[2] >> 16) & 0xFF) |
+                                    ((ctxbuf[3] >> 24) & 0xFF));
+            break;
+
+
+        default: 
+             break;
+       } 
+    }
+    else 
+    {
+        // MSF not implemented yet
+    }
+    
+    cout << "Observations: " << ctx.hdr.observations << endl;
+    
+    ctx.advance();
+    return true;
+}
+
+
+
+// OpenLabel State
+State * OpenLabel::advanceState()
+{
+  cout << "open label" << endl;
+  return NULL;
+}
+
+bool OpenLabel::process(Context & ctx)
+{
+
   return true;
 }

@@ -110,10 +110,7 @@ bool OpenK::process(Context & ctx)
           // 4 byte
           case R119:
           case R118:
-                ctx.hdr.variables = (int)((ctxbuf[0] & 0xFF) | 
-                                        ((ctxbuf[1] >> 8) & 0xFF) |
-                                        ((ctxbuf[2] >> 16) & 0xFF) |
-                                        ((ctxbuf[3] >> 24) & 0xFF));
+                ctx.hdr.variables = (int)((ctxbuf[0] & 0xFF) | ((ctxbuf[1] >> 8) & 0xFF) | ((ctxbuf[2] >> 16) & 0xFF) | ((ctxbuf[3] >> 24) & 0xFF));
                 break;
 
           // 2 byte
@@ -147,25 +144,17 @@ bool OpenN::process(Context & ctx)
     
     if (ctx.hdr.fileByteorder == LSF) 
     {
-
       switch(ctx.hdr.fileRelease)
       {
-        
         // 8 byte
-
         case R119:
         case R118:
-
               break;
         
         // 4 byte
         case R117:
-            ctx.hdr.observations =  ((ctxbuf[0] & 0xFF) | 
-                                    ((ctxbuf[1] >> 8)  & 0xFF) |
-                                    ((ctxbuf[2] >> 16) & 0xFF) |
-                                    ((ctxbuf[3] >> 24) & 0xFF));
+            ctx.hdr.observations = ((ctxbuf[0] & 0xFF) | ((ctxbuf[1] >> 8)  & 0xFF) | ((ctxbuf[2] >> 16) & 0xFF) | ((ctxbuf[3] >> 24) & 0xFF));
             break;
-
 
         default: 
              break;
@@ -176,8 +165,7 @@ bool OpenN::process(Context & ctx)
         // MSF not implemented yet
     }
     
-    cout << "Observations: " << ctx.hdr.observations << endl;
-    
+    cout << "Observations: " << ctx.hdr.observations << endl; 
     ctx.advance();
     return true;
 }
@@ -187,12 +175,43 @@ bool OpenN::process(Context & ctx)
 // OpenLabel State
 State * OpenLabel::advanceState()
 {
-  cout << "open label" << endl;
   return NULL;
 }
 
 bool OpenLabel::process(Context & ctx)
 {
+  char * ctxbuf = (char *) ctx.advance();
+  int label_count = 0;
+
+  if (ctx.hdr.fileByteorder == LSF)
+  {
+    switch(ctx.hdr.fileRelease)
+    {
+      case R119:
+      case R118:
+          label_count = ((ctxbuf[0] & 0xFF) | ((ctxbuf[1] >> 8)  & 0xFF));
+          ctx.hdr.datalabel.assign(&ctxbuf[2],label_count);
+          break;
+      
+      case R117:
+          label_count = ((ctxbuf[0] & 0xFF));
+          ctx.hdr.datalabel.assign(&ctxbuf[1],label_count);
+          break;
+
+      default: 
+           break;
+     } 
+  }
+  else
+  {
+      // not implemented yet
+  }
+
+  
+  cout << "Label Count: " << label_count << " " << ctx.hdr.datalabel << endl;
+  //currentState = OPEN_TS;
+  ctx.advance();
+
 
   return true;
 }

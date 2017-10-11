@@ -175,7 +175,7 @@ bool OpenN::process(Context & ctx)
 // OpenLabel State
 State * OpenLabel::advanceState()
 {
-  return NULL;
+  return new OpenTimeStamp();
 }
 
 bool OpenLabel::process(Context & ctx)
@@ -214,4 +214,29 @@ bool OpenLabel::process(Context & ctx)
 
 
   return true;
+}
+
+State * OpenTimeStamp::advanceState()
+{
+  return new OpenTimeStamp();
+}
+
+bool OpenTimeStamp::process(Context & ctx)
+{
+  char * ctxbuf = (char *) ctx.advance();
+  int label_count = 0;
+
+  switch(ctx.hdr.fileRelease)
+  {
+
+    case R119:
+    case R118:
+    case R117:
+        label_count = ((ctxbuf[0] & 0xFF));
+        ctx.hdr.ts.assign(&ctxbuf[1],label_count);
+        break;
+  }
+
+  cout << "timeStamp: " << ctx.hdr.ts << endl;
+
 }

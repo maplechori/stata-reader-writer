@@ -1,10 +1,12 @@
 
 #include <vector>
+#include <string.h>
 #include "StataHeader.h"
 #include "StataVariables.h"
 #include "StataRead.h"
 #include "StateBitops.h"
-#include <string.h>
+#include "StataMap.h"
+
 
 using namespace std;
 
@@ -27,6 +29,7 @@ class Context {
      Context(char * cursor);
      void * advance();
      StataHeader hdr;
+     StataMap map;
      State * currentState;
      vector<StataVariables *> vList;
 

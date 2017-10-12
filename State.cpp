@@ -172,8 +172,6 @@ bool OpenN::process(Context & ctx)
     return true;
 }
 
-
-
 // OpenLabel State
 State * OpenLabel::advanceState()
 {
@@ -208,19 +206,16 @@ bool OpenLabel::process(Context & ctx)
   {
       // not implemented yet
   }
-
   
   cout << "Label Count: " << label_count << " " << ctx.hdr.datalabel << endl;
-  //currentState = OPEN_TS;
   ctx.advance();
-
 
   return true;
 }
 
 State * OpenTimeStamp::advanceState()
 {
-  return new OpenTimeStamp();
+  return new OpenMap();
 }
 
 bool OpenTimeStamp::process(Context & ctx)
@@ -240,5 +235,34 @@ bool OpenTimeStamp::process(Context & ctx)
   }
 
   cout << "timeStamp: " << ctx.hdr.ts << endl;
+
+  return true;
+}
+
+State * OpenMap::advanceState()
+{
+  return NULL;
+}
+
+bool OpenMap::process(Context & ctx)
+{
+    char * ctxbuf = (char *)ctx.advance();
+    
+    ctx.map.stata_map["stata_data_start"] = 0;
+    ctx.map.stata_map["map"] = 0;
+    ctx.map.stata_map["variable_types"] = 0;
+    ctx.map.stata_map["varnames"] = 0;
+    ctx.map.stata_map["sortlist"] = 0;
+    ctx.map.stata_map["formats"] = 0;
+    ctx.map.stata_map["value_label_names"] = 0;
+    ctx.map.stata_map["variable_labels"] = 0;
+    ctx.map.stata_map["characteristics"] = 0;
+    ctx.map.stata_map["data"] = 0;
+    ctx.map.stata_map["strls"] = 0;
+    ctx.map.stata_map["value_labels"] = 0;
+    ctx.map.stata_map["stata_data_end"] = 0;
+    ctx.map.stata_map["eof"] = 0;
+  
+    return true;
 
 }

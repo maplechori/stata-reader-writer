@@ -5,8 +5,9 @@
  * Created on May 28, 2014, 5:35 PM
  */
 
-#ifndef STATAMAP_H
-#define	STATAMAP_H
+#ifndef __STATAMAP_H__
+#define	__STATAMAP_H__
+
 #include <string>
 #include "StataHeader.h"
 
@@ -17,9 +18,7 @@ public:
     StataMap();
     StataMap(const StataMap& orig);
     virtual ~StataMap();
-private:
-    std::string mapName;
-    int position;
+    map<string, int> stata_map;
     byteOrder order;
 
 };

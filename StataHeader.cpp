@@ -7,15 +7,19 @@
 
 #include "StataHeader.h"
 
-StataHeader::StataHeader() {
+StataHeader::StataHeader() 
+{
     
     
 }
 
-StataHeader::StataHeader(const StataHeader& orig) {
+StataHeader::StataHeader(const StataHeader& orig) 
+{
+
 }
 
-StataHeader::~StataHeader() {
+StataHeader::~StataHeader() 
+{
     
 }
 

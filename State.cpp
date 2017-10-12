@@ -102,6 +102,7 @@ State * OpenK::advanceState()
 
 bool OpenK::process(Context & ctx)
 {
+    
     if (ctx.hdr.fileByteorder == LSF) {
         char * ctxbuf = (char *) ctx.advance();
        
@@ -110,12 +111,12 @@ bool OpenK::process(Context & ctx)
           // 4 byte
           case R119:
           case R118:
-                ctx.hdr.variables = (int)((ctxbuf[0] & 0xFF) | ((ctxbuf[1] >> 8) & 0xFF) | ((ctxbuf[2] >> 16) & 0xFF) | ((ctxbuf[3] >> 24) & 0xFF));
+                ctx.hdr.variables = GetLSF<int>(ctxbuf, 4);
                 break;
 
           // 2 byte
           case R117:
-               ctx.hdr.variables = (int)((ctxbuf[0] & 0xFF) | ((ctxbuf[1] >> 8)& 0xFF));
+               ctx.hdr.variables = GetLSF<int>(ctxbuf, 2); 
                break;
 
           default: 
@@ -149,11 +150,12 @@ bool OpenN::process(Context & ctx)
         // 8 byte
         case R119:
         case R118:
+              ctx.hdr.observations = GetLSF<uint64_t>(ctxbuf, 8);
               break;
         
         // 4 byte
         case R117:
-            ctx.hdr.observations = ((ctxbuf[0] & 0xFF) | ((ctxbuf[1] >> 8)  & 0xFF) | ((ctxbuf[2] >> 16) & 0xFF) | ((ctxbuf[3] >> 24) & 0xFF));
+            ctx.hdr.observations = GetLSF<int>(ctxbuf, 4); 
             break;
 
         default: 
@@ -189,12 +191,12 @@ bool OpenLabel::process(Context & ctx)
     {
       case R119:
       case R118:
-          label_count = ((ctxbuf[0] & 0xFF) | ((ctxbuf[1] >> 8)  & 0xFF));
+          label_count = GetLSF<int>(ctxbuf, 2); 
           ctx.hdr.datalabel.assign(&ctxbuf[2],label_count);
           break;
       
       case R117:
-          label_count = ((ctxbuf[0] & 0xFF));
+          label_count = GetLSF<int>(ctxbuf, 1);
           ctx.hdr.datalabel.assign(&ctxbuf[1],label_count);
           break;
 
@@ -232,7 +234,7 @@ bool OpenTimeStamp::process(Context & ctx)
     case R119:
     case R118:
     case R117:
-        label_count = ((ctxbuf[0] & 0xFF));
+        label_count = GetLSF<int>(ctxbuf, 1); 
         ctx.hdr.ts.assign(&ctxbuf[1],label_count);
         break;
   }

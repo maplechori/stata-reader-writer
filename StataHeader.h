@@ -23,6 +23,7 @@ enum release { R119, R118, R117, R115, R114,  R113, R112 };
 enum byteOrder { LSF , MSF };
 
 class StataHeader  {
+    
 public:
     StataHeader();
     StataHeader(const StataHeader& orig);

@@ -3,6 +3,7 @@
 #include "StataHeader.h"
 #include "StataVariables.h"
 #include "StataRead.h"
+#include "StateBitops.h"
 #include <string.h>
 
 using namespace std;
@@ -10,6 +11,7 @@ using namespace std;
 class Context;
 
 #define CHECK_TAG(tag) ((!strcasecmp(buffer, tag)) ? true : false) 
+
 
 class State
 {

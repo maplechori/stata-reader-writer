@@ -215,7 +215,7 @@ bool OpenLabel::process(Context & ctx)
 
 State * OpenTimeStamp::advanceState()
 {
-  return new OpenMap();
+  return new CloseHeader();
 }
 
 bool OpenTimeStamp::process(Context & ctx)
@@ -235,34 +235,56 @@ bool OpenTimeStamp::process(Context & ctx)
   }
 
   cout << "timeStamp: " << ctx.hdr.ts << endl;
+  ctx.advance();
+  return true;
+}
 
+State * CloseHeader::advanceState()
+{
+  return new OpenMap();
+}
+
+bool CloseHeader::process(Context & ctx)
+{
+  ctx.advance();
   return true;
 }
 
 State * OpenMap::advanceState()
 {
-  return NULL;
+  return new OpenMap();
 }
 
 bool OpenMap::process(Context & ctx)
 {
+    #define MAP_COUNT 14
     char * ctxbuf = (char *)ctx.advance();
+    int i, j;
+    cout << "here" << endl;
+   
+    string map_names[] = {
+        "stata_data_start", 
+        "map",
+        "variable_types",
+        "varnames",
+        "sortlist",
+        "formats",
+        "value_label_names",
+        "variable_labels",
+        "characteristics",
+        "data",
+        "strls",
+        "value_labels",
+        "stata_data_end",
+        "eof"
+    };
+
+    for (i = 0; i < MAP_COUNT; i++, ctxbuf += 8)
+    {
+        ctx.map.stata_map[map_names[i].c_str()] = GetLSF<uint64_t>(ctxbuf, 8);   
+        cout << map_names[i].c_str() << " 0x" << hex << ctx.map.stata_map[map_names[i].c_str()] << endl;
+    }
     
-    ctx.map.stata_map["stata_data_start"] = 0;
-    ctx.map.stata_map["map"] = 0;
-    ctx.map.stata_map["variable_types"] = 0;
-    ctx.map.stata_map["varnames"] = 0;
-    ctx.map.stata_map["sortlist"] = 0;
-    ctx.map.stata_map["formats"] = 0;
-    ctx.map.stata_map["value_label_names"] = 0;
-    ctx.map.stata_map["variable_labels"] = 0;
-    ctx.map.stata_map["characteristics"] = 0;
-    ctx.map.stata_map["data"] = 0;
-    ctx.map.stata_map["strls"] = 0;
-    ctx.map.stata_map["value_labels"] = 0;
-    ctx.map.stata_map["stata_data_end"] = 0;
-    ctx.map.stata_map["eof"] = 0;
-  
     return true;
 
 }

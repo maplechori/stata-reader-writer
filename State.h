@@ -60,6 +60,11 @@ class OpenHeader : public State {
        bool process(Context & ctx);
 };
 
+class CloseHeader : public State {
+  bool check(char * buffer) { return CHECK_TAG(XML_CLOSE_HEADER); } 
+  State * advanceState(); 
+  bool process(Context & ctx);
+};
 
 class OpenRelease : public State {
        bool check(char * buffer) { return CHECK_TAG(XML_OPEN_RELEASE); }

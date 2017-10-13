@@ -18,7 +18,7 @@ public:
     StataMap();
     StataMap(const StataMap& orig);
     virtual ~StataMap();
-    map<string, int> stata_map;
+    map<string, uint64_t> stata_map;
     byteOrder order;
 
 };

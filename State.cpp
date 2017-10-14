@@ -282,7 +282,7 @@ bool OpenMap::process(Context & ctx)
     for (i = 0; i < MAP_COUNT; i++, ctxbuf += 8)
     {
         ctx.map.stata_map[map_names[i].c_str()] = GetLSF<uint64_t>(ctxbuf, 8);   
-        cout << map_names[i].c_str() << " 0x" << hex << ctx.map.stata_map[map_names[i].c_str()] << endl;
+        cout << map_names[i].c_str() << " " << ctx.map.stata_map[map_names[i].c_str()] << endl;
     }
     
     return true;

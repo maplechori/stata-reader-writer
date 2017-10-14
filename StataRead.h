@@ -10,6 +10,8 @@
 #include <boost/regex.hpp>
 #include <boost/variant.hpp>
 #include <boost/program_options.hpp>
+#include <boost/test/unit_test.hpp>
+
 #include <list>
 #include <boost/asio.hpp>
 #include "StataHeader.h"

@@ -4,5 +4,5 @@
 
 BOOST_AUTO_TEST_CASE( constructors_test )
 {
-    BOOST_CHECK(4 == 4);
+    BOOST_CHECK(4 == 3);
 }

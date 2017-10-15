@@ -1,6 +1,7 @@
 
 #include <vector>
 #include <string.h>
+#include <sqlite3.h>
 #include "StataHeader.h"
 #include "StataVariables.h"
 #include "StataRead.h"

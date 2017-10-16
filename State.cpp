@@ -252,7 +252,7 @@ bool CloseHeader::process(Context & ctx)
 
 State * OpenMap::advanceState()
 {
-  return new OpenMap();
+  return new OpenVarTypes();
 }
 
 bool OpenMap::process(Context & ctx)
@@ -260,7 +260,6 @@ bool OpenMap::process(Context & ctx)
     #define MAP_COUNT 14
     char * ctxbuf = (char *)ctx.advance();
     int i, j;
-    cout << "here" << endl;
    
     string map_names[] = {
         "stata_data_start", 
@@ -280,11 +279,43 @@ bool OpenMap::process(Context & ctx)
     };
 
     for (i = 0; i < MAP_COUNT; i++, ctxbuf += 8)
-    {
         ctx.map.stata_map[map_names[i].c_str()] = GetLSF<uint64_t>(ctxbuf, 8);   
-        cout << map_names[i].c_str() << " " << ctx.map.stata_map[map_names[i].c_str()] << endl;
-    }
     
+    ctx.advance();
+
     return true;
 
+}
+
+
+State * OpenVarTypes::advanceState()
+{
+  cout << "done vartypes" << endl;
+  return NULL; //new OpenMap();
+}
+
+bool OpenVarTypes::process(Context & ctx)
+{
+  char * ctxbuf = (char *) ctx.advance();  
+  int curr = 0;
+
+  if (ctx.hdr.fileByteorder == LSF) {
+      
+     while (*ctxbuf != '<') {
+          StataVariables * sta = new StataVariables();          
+          sta->type = GetLSF<unsigned int>(ctxbuf, 2);
+          cout << "type: " << sta->type << endl;
+          ctx.vList.push_back(sta);
+          ctxbuf += 2;
+          curr++;
+      }
+
+  } else {
+      // not implemented yet
+  }
+
+
+  ctx.advance();
+
+  return true;
 }

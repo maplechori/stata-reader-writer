@@ -287,11 +287,9 @@ bool OpenMap::process(Context & ctx)
 
 }
 
-
 State * OpenVarTypes::advanceState()
 {
-  cout << "done vartypes" << endl;
-  return NULL; //new OpenMap();
+  return new  OpenVarNames();
 }
 
 bool OpenVarTypes::process(Context & ctx)
@@ -318,4 +316,51 @@ bool OpenVarTypes::process(Context & ctx)
   ctx.advance();
 
   return true;
+}
+
+
+
+State * OpenVarNames::advanceState()
+{
+  cout << "done varnames" << endl;
+  return new OpenVarNames();
+}
+
+bool OpenVarNames::process(Context & ctx)
+{
+  char * ctxbuf = (char *) ctx.advance();    
+  int sz = 0;
+  int curr = 0;
+
+  if (ctx.hdr.fileByteorder == LSF) {
+
+      while (*ctxbuf != '<') {
+     
+          switch(ctx.hdr.fileRelease)
+          { 
+            // UTF-8
+            case R119:
+            case R118:
+                      sz = wcslen((wchar_t *)ctxbuf);
+                      ((StataVariables *)ctx.vList.at(curr))->varname.assign(&ctxbuf[0],sz);
+                      ctxbuf += 130;
+                      break;
+            // ASCII 
+            case R117:
+                      sz = strlen(ctxbuf);
+                      ((StataVariables *)ctx.vList.at(curr))->varname.assign(&ctxbuf[0],sz);
+                      ctxbuf += 33;
+                      break;
+          }
+
+          cout << ((StataVariables *)ctx.vList.at(curr))->varname << endl;
+          
+          
+          curr++;
+      }
+  } else {
+      // not implemented yet
+  }
+
+
 }

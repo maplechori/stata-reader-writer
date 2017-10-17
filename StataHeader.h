@@ -35,7 +35,6 @@ public:
     std::string datalabel;
     enum release fileRelease;
     enum byteOrder fileByteorder;
-    
     virtual ~StataHeader();
 private:
 

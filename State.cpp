@@ -322,8 +322,7 @@ bool OpenVarTypes::process(Context & ctx)
 
 State * OpenVarNames::advanceState()
 {
-  cout << "done varnames" << endl;
-  return new OpenVarNames();
+  return new OpenSortList();
 }
 
 bool OpenVarNames::process(Context & ctx)
@@ -354,13 +353,34 @@ bool OpenVarNames::process(Context & ctx)
           }
 
           cout << ((StataVariables *)ctx.vList.at(curr))->varname << endl;
-          
-          
           curr++;
       }
   } else {
       // not implemented yet
   }
 
+  ctx.advance();
+
+}
+
+
+
+State * OpenSortList::advanceState()
+{
+  return NULL;
+}
+
+bool OpenSortList::process(Context & ctx)
+{
+  char * ctxbuf = (char *) ctx.advance();    
+  
+  if (ctx.hdr.fileByteorder == LSF) {
+
+  }
+  else {
+     // not implemented yet
+  }
+
+  ctx.advance();
 
 }

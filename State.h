@@ -41,8 +41,11 @@ class Context {
          cursor += count; 
          return tmp;  
      };
+
+     void exportToDB(char * filename);
    
    private:
+     sqlite3 *db;
      char buffer[4096];
      char * cursor;
      char * start;

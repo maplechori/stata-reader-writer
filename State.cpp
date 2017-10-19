@@ -5,6 +5,13 @@ Context::Context(char * cursor) : start(0) {
    this->currentState = new OpenDTA();
 }
 
+void Context::exportToDB(char * filename)
+{
+
+}
+
+
+
 void * Context::advance() {
 
     for (start = cursor; cursor && *cursor != '>'; cursor++);
@@ -58,6 +65,10 @@ bool OpenRelease::process(Context & ctx)
      cout << version << endl;
      switch(strtol(version.c_str(), NULL, 10))
      {
+        case 119:
+        case 118:
+              ctx.hdr.fileRelease = R119;
+              break;
 	      case 117: 
                ctx.hdr.fileRelease = R117;
                break;
@@ -302,7 +313,6 @@ bool OpenVarTypes::process(Context & ctx)
      while (*ctxbuf != '<') {
           StataVariables * sta = new StataVariables();          
           sta->type = GetLSF<unsigned int>(ctxbuf, 2);
-          cout << "type: " << sta->type << endl;
           ctx.vList.push_back(sta);
           ctxbuf += 2;
           curr++;
@@ -367,20 +377,104 @@ bool OpenVarNames::process(Context & ctx)
 
 State * OpenSortList::advanceState()
 {
-  return NULL;
+  return new OpenFormats();
 }
 
 bool OpenSortList::process(Context & ctx)
 {
   char * ctxbuf = (char *) ctx.advance();    
   
+  // We don't really need the sort list feature for the moment
+  ctx.advance(); // </sortlist>
+
+}
+
+State * OpenFormats::advanceState()
+{
+  return new OpenValueLabelNames();
+}
+
+bool OpenFormats::process(Context & ctx)
+{
+  char * ctxbuf = (char *) ctx.advance();    
+  int curr = 0, sz = 0;
+
+  cout << "..." << endl;
+
   if (ctx.hdr.fileByteorder == LSF) {
 
-  }
-  else {
-     // not implemented yet
+      while (*ctxbuf != '<') {  
+          
+          switch(ctx.hdr.fileRelease)
+          { 
+            // UTF-8
+            case R119:
+            case R118:
+                sz = wcslen((wchar_t *)ctxbuf);
+                ((StataVariables *)ctx.vList.at(curr))->format.assign(&ctxbuf[0],sz);              
+                ctxbuf += 57;
+                break;
+
+            // ASCII
+            case R117:
+                sz = strlen((char *)ctxbuf);
+                ((StataVariables *)ctx.vList.at(curr))->format.assign(&ctxbuf[0],sz);  
+                cout << ((StataVariables *)ctx.vList.at(curr))->format << endl;                
+                ctxbuf += 49;
+                break;
+          }
+
+          curr++;
+      }
+
+  } 
+  else 
+  {
+      // not implemented yet
   }
 
   ctx.advance();
 
+}
+
+State * OpenValueLabelNames::advanceState()
+{
+  return NULL;
+}
+
+bool OpenValueLabelNames::process(Context & ctx)
+{
+  char * ctxbuf = (char *) ctx.advance();      
+  int curr = 0, sz = 0;
+
+  if (ctx.hdr.fileByteorder == LSF) {
+
+      while (*ctxbuf != '<') {
+        
+          switch(ctx.hdr.fileRelease)
+          { 
+            // UTF-8
+            case R119:
+            case R118:
+                sz = wcslen((wchar_t *)ctxbuf);
+                ((StataVariables *)ctx.vList.at(curr))->vallbl.assign(&ctxbuf[0],sz);              
+                ctxbuf += 129;
+                break;
+
+            // ASCII
+            case R117:
+                sz = strlen((char *)ctxbuf);
+                ((StataVariables *)ctx.vList.at(curr))->vallbl.assign(&ctxbuf[0],sz);  
+                cout << ((StataVariables *)ctx.vList.at(curr))->vallbl << endl;                
+                ctxbuf += 33;
+                break;
+          }          
+                 
+          curr++;
+      }
+  } else {
+      // not implemented yet
+  }
+
+  ctx.advance();
 }

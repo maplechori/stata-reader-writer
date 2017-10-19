@@ -399,8 +399,6 @@ bool OpenFormats::process(Context & ctx)
   char * ctxbuf = (char *) ctx.advance();    
   int curr = 0, sz = 0;
 
-  cout << "..." << endl;
-
   if (ctx.hdr.fileByteorder == LSF) {
 
       while (*ctxbuf != '<') {  
@@ -439,7 +437,7 @@ bool OpenFormats::process(Context & ctx)
 
 State * OpenValueLabelNames::advanceState()
 {
-  return NULL;
+  return new OpenVariableLabels();
 }
 
 bool OpenValueLabelNames::process(Context & ctx)
@@ -477,4 +475,74 @@ bool OpenValueLabelNames::process(Context & ctx)
   }
 
   ctx.advance();
+}
+
+State * OpenVariableLabels::advanceState()
+{
+  return new OpenCharacteristics();
+}
+
+bool OpenVariableLabels::process(Context & ctx)
+{
+  char * ctxbuf = (char *) ctx.advance();      
+  int curr = 0, sz = 0;
+
+  if (ctx.hdr.fileByteorder == LSF) {
+    
+    while (*ctxbuf != '<') {
+
+      switch(ctx.hdr.fileRelease)
+      {
+          case R119:
+          case R118:
+
+            if (ctxbuf[0] != 0) {
+              sz = wcslen((wchar_t *)ctxbuf);
+              ((StataVariables *)ctx.vList.at(curr))->varlbl.assign(&ctxbuf[0],sz);  
+              cout << ctx.vList.at(curr)->varname << " " << ctx.vList.at(curr)->varlbl << ctx.vList.at(curr)->format << endl;
+            }
+  
+            ctxbuf += 321;
+            break;
+
+          case R117:
+          
+            if (ctxbuf[0] != 0) {
+              sz = strlen((char *)ctxbuf);
+              ((StataVariables *)ctx.vList.at(curr))->varlbl.assign(&ctxbuf[0],sz);  
+              cout << ctx.vList.at(curr)->varname << " " << ctx.vList.at(curr)->varlbl << " " << ctx.vList.at(curr)->format << endl;
+            }
+
+            ctxbuf += 81;
+            break;
+
+          default:
+            break;
+      }
+
+      curr++;
+    }
+    
+                             
+    
+                             
+                           
+  } 
+  else 
+  {
+          // not implemented yet
+  }
+
+  ctx.advance();
+}
+
+
+State * OpenCharacteristics::advanceState()
+{
+  return NULL;
+}
+
+bool OpenCharacteristics::process(Context & ctx)
+{
+
 }

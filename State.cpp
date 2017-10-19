@@ -521,12 +521,7 @@ bool OpenVariableLabels::process(Context & ctx)
       }
 
       curr++;
-    }
-    
-                             
-    
-                             
-                           
+    }                                                  
   } 
   else 
   {
@@ -539,10 +534,56 @@ bool OpenVariableLabels::process(Context & ctx)
 
 State * OpenCharacteristics::advanceState()
 {
-  return NULL;
+  return new OpenData();
 }
 
 bool OpenCharacteristics::process(Context & ctx)
 {
+    char * ctxbuf = (char *) ctx.advance();      
+    int curr = 0, sz = 0;
 
+    while(!strcasecmp(ctxbuf, "<ch>"))
+    {
+        uint32_t * sn = (uint32_t *)ctxbuf;
+
+        if (ctx.hdr.fileByteorder == MSF)
+        {
+           *sn = ntohl(*sn);
+        }
+
+        ctxbuf += 4;
+        cout << "Characteristics: " << ctxbuf << endl;
+        ctxbuf += *sn;
+
+        ctx.advance();
+        ctx.advance();
+    }
+
+    ctx.advance();
+}
+
+State * OpenData::advanceState()
+{
+  return NULL;
+}
+
+bool OpenData::process(Context & ctx)
+{
+  char * ctxbuf = (char *) ctx.advance();      
+  int curr = 0, sz = 0;
+  
+    if (ctx.hdr.fileByteorder == LSF) {
+      
+      while (*ctxbuf != '<') {
+        
+              
+      }
+        
+    }
+    else
+    {
+       // not implemented yet
+    }
+
+  ctx.advance();
 }

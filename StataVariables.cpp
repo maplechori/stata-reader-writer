@@ -12,7 +12,9 @@ StataVariables::StataVariables() {
     
 }
 
-StataVariables::StataVariables(const StataVariables& orig) {
+StataVariables::StataVariables(const StataVariables& orig) 
+{
+    
 }
 
 StataVariables::~StataVariables() {

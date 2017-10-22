@@ -32,6 +32,7 @@ class Context {
      StataHeader hdr;
      StataMap map;
      State * currentState;
+     bool strls;
      vector<StataVariables *> vList;
 
      string getChars(int count) 
@@ -164,6 +165,12 @@ class OpenData : public State {
        bool check(char * buffer) { return CHECK_TAG(XML_OPEN_DATA); }
        State * advanceState();
        bool process(Context & ctx);
+};
+
+class OpenSTRL : public State {
+  bool check(char * buffer) { return CHECK_TAG(XML_OPEN_STRLS); }
+  State * advanceState();
+  bool process(Context & ctx);
 };
 
 class OpenValueLabel : public State {

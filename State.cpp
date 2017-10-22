@@ -1,6 +1,6 @@
 #include "State.h"
 
-Context::Context(char * cursor) : start(0) {
+Context::Context(char * cursor) : start(0), strls(false) {
    this->cursor = cursor;
    this->currentState = new OpenDTA();
 }
@@ -564,7 +564,7 @@ bool OpenCharacteristics::process(Context & ctx)
 
 State * OpenData::advanceState()
 {
-  return NULL;
+  return new OpenSTRL();
 }
 
 bool OpenData::process(Context & ctx)
@@ -574,8 +574,45 @@ bool OpenData::process(Context & ctx)
   
     if (ctx.hdr.fileByteorder == LSF) {
       
-      while (*ctxbuf != '<') {
-        
+        for (vector<StataVariables *>::iterator it = ctx.vList.begin();  *ctxbuf != '<' && it != ctx.vList.end(); ++it)
+        {
+          switch((*it)->type)
+          {
+              case ST_STRL:
+                      cout << "STRL" << endl;
+                      ctx.strls = true;
+                      // handle STRLs
+
+                      break;
+              case ST_DOUBLE:
+                      cout << "DOUBLE" << endl;
+                      ctxbuf += 8;
+                      break;
+              case ST_FLOAT:
+                      cout << "FLOAT" << endl;
+                      ctxbuf += 4;
+                      break;
+              case ST_LONG:
+                      cout << "LONG" << endl;
+                      ctxbuf += 4;
+                      break;
+              case ST_INT:
+                      cout << "INTEGER" << endl;
+                      ctxbuf += 2;
+                      break;
+              case ST_BYTE:              
+                      cout << "BYTE" << endl;
+                      ctxbuf++;
+                      break;
+              default:
+                      if ((*it)->type > 0 && (*it)->type <= 2045) {
+                          cout << "STRING OF LENGTH " << (*it)->type << endl;
+                          ctxbuf += (*it)->type;
+                      }
+                      else
+                          cout << "UNKNOWN TYPE" << endl;
+                      break;
+              }
               
       }
         
@@ -586,4 +623,41 @@ bool OpenData::process(Context & ctx)
     }
 
   ctx.advance();
+}
+
+State * OpenSTRL::advanceState()
+{
+  return new OpenValueLabel();
+}
+
+bool OpenSTRL::process(Context & ctx)
+{
+  char * ctxbuf = (char *) ctx.advance();      
+
+  if (!ctx.strls)
+  {
+    cout << "no strls, next" << endl;
+    return ctx.advance() && true;
+  }
+  else
+      {
+        // not implemented
+      }
+
+      return false;
+}
+
+State * OpenValueLabel::advanceState()
+{
+  return NULL;
+}
+
+bool OpenValueLabel::process(Context & ctx)
+{
+  char * ctxbuf = (char *) ctx.advance();      
+  
+
+
+
+  
 }

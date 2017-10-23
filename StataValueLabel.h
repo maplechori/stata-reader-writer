@@ -9,24 +9,16 @@
 #define	STATAVALUELABELS_H
 
 #include <string>
-
-class ValueLabelTable {
-
-};
+#include <map>
 
 
 class StataValueLabel {
-    public:
+
+public:
          StataValueLabel();
          ~StataValueLabel();
-
-    private:
-        int lenvtable;
         std::string labname;
-        int padding;
-        
-
-
+        std::map<int, std::string> valuelabel;
 
 };
 

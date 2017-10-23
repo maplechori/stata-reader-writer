@@ -656,8 +656,15 @@ bool OpenValueLabel::process(Context & ctx)
 {
   char * ctxbuf = (char *) ctx.advance();      
   
+  if (ctxbuf[0] == '<' && ctxbuf[1] == '/')
+  {
+      // we got no labels
+  }
+  else
+  {
+    
+  }
 
 
 
-  
 }

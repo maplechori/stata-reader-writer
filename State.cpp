@@ -721,13 +721,17 @@ bool OpenInnerValueLabel::process(Context & ctx)
                       offsets[i] = GetLSF<int>(ctxbuf, 4);
 
                     txtorig = ctxbuf + (entries * 4);
+
+                    cout << "textlen: " << txtlen << endl;
                     
                     for(int i = 0; i < entries; i++, ctxbuf += 4)
                     {
-                        cout << "Value: " << GetLSF<unsigned int>(ctxbuf, 4) << " " << offsets[i] << " " << (char *)(&txtorig[offsets[i]]) << endl;
-              
+                        int _of = (i+1 < entries) ? offsets[i+1] - offsets[i] : txtlen - offsets[i];
+                        svl->valuelabel[GetLSF<unsigned int>(ctxbuf, 4)].assign((char *)(&txtorig[offsets[i]]), _of );
+                        cout << svl->valuelabel[GetLSF<unsigned int>(ctxbuf, 4)] << endl;
                     }
-                    
+
+              
                     exit(1);
               break;
 

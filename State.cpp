@@ -649,22 +649,42 @@ bool OpenSTRL::process(Context & ctx)
 
 State * OpenValueLabel::advanceState()
 {
-  return NULL;
+  if (getHasLabels())
+    return new OpenInnerValueLabel();
+  else
+    return new CloseValueLabel();
+
+ 
 }
 
 bool OpenValueLabel::process(Context & ctx)
 {
   char * ctxbuf = (char *) ctx.advance();      
   
-  if (ctxbuf[0] == '<' && ctxbuf[1] == '/')
-  {
-      // we got no labels
-  }
+  if (ctxbuf[0] == '<' && ctxbuf[1] == '/')  
+      setHasLabels(false);
   else
-  {
-    
-  }
+      setHasLabels(true);
+
+}
+
+State * CloseValueLabel::advanceState()
+{
+  return NULL;
+}
+
+bool CloseValueLabel::process(Context & ctx)
+{
+    ctx.advance();
+}
 
 
+State * OpenInnerValueLabel::advanceState()
+{
+  return NULL;
+}
 
+bool OpenInnerValueLabel::process(Context & ctx)
+{
+    cout << "at inner value label" << endl;
 }

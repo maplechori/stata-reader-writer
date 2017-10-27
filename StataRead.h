@@ -100,6 +100,9 @@ enum state {
 #define XML_OPEN_VALUE_LABELS "<value_labels>"
 #define XML_CLOSE_VALUE_LABELS "</value_labels>"
 
+#define XML_OPEN_INNER_VALUE_LABELS "<lbl>"
+#define XML_CLOSE_INNER_VALUE_LABELS "</lbl>"
+
 #endif
 
 

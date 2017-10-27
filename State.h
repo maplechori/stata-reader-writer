@@ -177,5 +177,29 @@ class OpenValueLabel : public State {
   bool check(char * buffer) { return CHECK_TAG(XML_OPEN_VALUE_LABELS); }
   State * advanceState();
   bool process(Context & ctx);
+  void setHasLabels(bool v) { hasLabels = v; };
+  bool getHasLabels() { return hasLabels; };
+  private:
+    bool hasLabels;
 };
 
+class CloseValueLabel : public State {
+  bool check(char * buffer) { return CHECK_TAG(XML_CLOSE_VALUE_LABELS); }
+  State * advanceState();
+  bool process(Context & ctx);
+};
+
+
+
+class OpenInnerValueLabel : public State {
+  bool check(char * buffer) { return CHECK_TAG(XML_OPEN_INNER_VALUE_LABELS); }
+  State * advanceState();
+  bool process(Context & ctx);
+};
+
+
+class CloseInnerValueLabel : public State {
+  bool check(char * buffer) { return CHECK_TAG(XML_CLOSE_INNER_VALUE_LABELS); }
+  State * advanceState();
+  bool process(Context & ctx);
+};

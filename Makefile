@@ -2,7 +2,7 @@ CC=g++
 CFLAGS=
 DEBUG=-g
 LDFLAGS=-lboost_system -lboost_unit_test_framework
-SOURCES=main.cpp StataBase.cpp StataHeader.cpp StataMap.cpp StataVariables.cpp StataRead.cpp State.cpp
+SOURCES=main.cpp StataBase.cpp StataHeader.cpp StataMap.cpp StataVariables.cpp StataRead.cpp StataValueLabel.cpp State.cpp
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=main
 

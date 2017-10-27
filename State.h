@@ -7,7 +7,7 @@
 #include "StataRead.h"
 #include "StateBitops.h"
 #include "StataMap.h"
-
+#include "StataValueLabel.h"
 
 using namespace std;
 

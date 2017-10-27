@@ -686,5 +686,57 @@ State * OpenInnerValueLabel::advanceState()
 
 bool OpenInnerValueLabel::process(Context & ctx)
 {
-    cout << "at inner value label" << endl;
+    char * ctxbuf = (char *) ctx.advance(); 
+    char * txtorig = NULL;      
+    int curr = 0, sz = 0, entries = 0, txtlen = 0, * offsets = NULL;
+    StataValueLabel * svl = new StataValueLabel();
+
+     if (ctx.hdr.fileByteorder == LSF) {
+        
+        while (*ctxbuf != '<') {
+          
+          switch(ctx.hdr.fileRelease)
+          {
+             
+            case R119:
+            case R118:
+
+              break;
+
+            case R117:  
+                    cout << "len of value label table: " << GetLSF<unsigned int>(ctxbuf, 4) << endl;
+                    ctxbuf += 4;
+                    sz = strlen((char *)ctxbuf);
+                    svl->labname.assign(&ctxbuf[0], sz);
+                    cout << svl->labname << endl;
+                    ctxbuf += 36;
+                    entries = GetLSF<unsigned int>(ctxbuf, 4);
+                    ctxbuf += 4;
+                    txtlen = GetLSF<unsigned int>(ctxbuf, 4);
+                    ctxbuf += 4;
+
+                    offsets = new int[entries]; 
+
+                    for (int i = 0; i < entries; i++, ctxbuf += 4)
+                      offsets[i] = GetLSF<int>(ctxbuf, 4);
+
+                    txtorig = ctxbuf + (entries * 4);
+                    
+                    for(int i = 0; i < entries; i++, ctxbuf += 4)
+                    {
+                        cout << "Value: " << GetLSF<unsigned int>(ctxbuf, 4) << " " << offsets[i] << " " << (char *)(&txtorig[offsets[i]]) << endl;
+              
+                    }
+                    
+                    exit(1);
+              break;
+
+           }
+        }
+      }
+      else
+      {
+
+      }
+        
 }

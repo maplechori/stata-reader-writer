@@ -59,6 +59,13 @@ class OpenDTA : public State {
       bool process(Context & ctx);
 };
 
+
+class CloseDTA : public State {
+  bool check(char * buffer) { return CHECK_TAG(XML_OPEN_FILE); }
+  State * advanceState();
+  bool process(Context & ctx);
+};
+
 class OpenHeader : public State {
        bool check(char * buffer) { return CHECK_TAG(XML_OPEN_HEADER); } 
        State * advanceState(); 

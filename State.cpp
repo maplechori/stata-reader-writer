@@ -42,6 +42,17 @@ State * OpenDTA::advanceState() {
    return new OpenHeader();
 }
 
+bool CloseDTA::process(Context & ctx) 
+{
+   ctx.advance();
+   return true;
+}
+
+State * CloseDTA::advanceState() { 
+   return NULL;
+}
+
+
 // OpenHeader State 
 bool OpenHeader::process(Context & ctx)
 {
@@ -681,7 +692,7 @@ bool CloseValueLabel::process(Context & ctx)
 
 State * OpenInnerValueLabel::advanceState()
 {
-  return NULL;
+  return new CloseDTA();
 }
 
 bool OpenInnerValueLabel::process(Context & ctx)
@@ -704,7 +715,7 @@ bool OpenInnerValueLabel::process(Context & ctx)
               break;
 
             case R117:  
-                    cout << "len of value label table: " << GetLSF<unsigned int>(ctxbuf, 4) << endl;
+
                     ctxbuf += 4;
                     sz = strlen((char *)ctxbuf);
                     svl->labname.assign(&ctxbuf[0], sz);
@@ -721,8 +732,6 @@ bool OpenInnerValueLabel::process(Context & ctx)
                       offsets[i] = GetLSF<int>(ctxbuf, 4);
 
                     txtorig = ctxbuf + (entries * 4);
-
-                    cout << "textlen: " << txtlen << endl;
                     
                     for(int i = 0; i < entries; i++, ctxbuf += 4)
                     {
@@ -731,8 +740,7 @@ bool OpenInnerValueLabel::process(Context & ctx)
                         cout << svl->valuelabel[GetLSF<unsigned int>(ctxbuf, 4)] << endl;
                     }
 
-              
-                    exit(1);
+                    ctxbuf = txtorig + txtlen;
               break;
 
            }
@@ -743,4 +751,6 @@ bool OpenInnerValueLabel::process(Context & ctx)
 
       }
         
+
+      ctx.advance();
 }

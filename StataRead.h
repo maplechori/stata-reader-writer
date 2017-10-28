@@ -17,29 +17,6 @@
 #include "StataHeader.h"
 #include "StataVariables.h"
 
-
-enum state {
-    OPEN_HEADER,
-    OPEN_RELEASE,
-    OPEN_BYTEORDER,
-    OPEN_K,
-    OPEN_N,
-    OPEN_LBL,
-    OPEN_TS,
-    OPEN_MAP,
-    OPEN_VARTYPES,
-    OPEN_VARNAMES,
-    OPEN_SORTLIST,
-    OPEN_FORMATS,
-    OPEN_VALLBL,
-    OPEN_VARLBL,
-    OPEN_CHARACTERISTICS,
-    OPEN_DATA,
-    CLOSE_HEADER
-
-
-};
-
 #define XML_OPEN_FILE "<stata_dta>"
 #define XML_CLOSE_FILE "</stata_dta>"
 

@@ -317,7 +317,6 @@ bool OpenVarTypes::process(Context & ctx)
 {
   char * ctxbuf = (char *) ctx.advance();  
   int curr = 0;
-  cout << "open var types" << endl;
 
   if (ctx.hdr.fileByteorder == LSF) {
       
@@ -459,7 +458,6 @@ bool OpenValueLabelNames::process(Context & ctx)
 {
   char * ctxbuf = (char *) ctx.advance();      
   int curr = 0, sz = 0;
-  cout << "OpenValueLabelNames" << endl;
 
   if (ctx.hdr.fileByteorder == LSF) {
 
@@ -579,6 +577,26 @@ bool OpenCharacteristics::process(Context & ctx)
     }
 
     ctx.advance();
+}
+
+State * OpenCH::advanceState()
+{
+  return new CloseCH();
+}
+
+bool OpenCH::process(Context & ctx)
+{
+
+}
+
+State * CloseCH::advanceState()
+{
+  return new OpenData();
+}
+
+bool CloseCH::process(Context & ctx)
+{
+
 }
 
 State * OpenData::advanceState()

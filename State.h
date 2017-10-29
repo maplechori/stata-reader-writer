@@ -115,6 +115,18 @@ class OpenLabel : public State {
        bool process(Context & ctx);
 };
 
+class OpenCH : public State {
+      bool check(char * buffer) { return CHECK_TAG(XML_OPEN_CH); }
+      State * advanceState();
+      bool process(Context & ctx);
+};
+
+class CloseCH : public State {
+      bool check(char * buffer) { return CHECK_TAG(XML_CLOSE_CH); }
+      State * advanceState();
+      bool process(Context & ctx);
+};
+
 class OpenTimeStamp : public State {
        bool check(char * buffer) { return CHECK_TAG(XML_OPEN_TIMESTAMP); }
        State * advanceState();
@@ -167,6 +179,10 @@ class OpenCharacteristics : public State {
        bool check(char * buffer) { return CHECK_TAG(XML_OPEN_CHARACTERISTICS); }
        State * advanceState();
        bool process(Context & ctx);
+       void setHasCharacteristics(bool v) { hasCharacteristics = v; };
+       bool getHasCharacteristics() { return hasCharacteristics; };
+       private:
+         bool hasCharacteristics;
 };
 
 class OpenData : public State {

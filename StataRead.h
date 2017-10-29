@@ -44,6 +44,10 @@
 #define XML_OPEN_MAP "<map>"
 #define XML_CLOSE_MAP "</map>"
 
+#define XML_OPEN_CH "<ch>"
+#define XML_CLOSE_CH "</ch>"
+
+
 #define XML_LSF "LSF"
 #define XML_MSF "MSF"
 

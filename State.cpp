@@ -15,17 +15,18 @@ void Context::exportToDB(char * filename)
 void * Context::advance() {
 
     for (start = cursor; cursor && *cursor != '>'; cursor++);
-
+  
     if (cursor && *cursor == '>') {
+      cout << cursor - start << endl;
       cursor++;
-      strncpy(buffer, start, cursor - start);
+      strncpy(buffer, start, cursor - start); /* buffer overflow */
       buffer[cursor-start]='\0';
     }
 
-    while(this->currentState->check(this->buffer))
+    while(currentState->check(buffer))
     {   
         currentState->process(*this);
-        this->currentState = this->currentState->advanceState();
+        currentState = currentState->advanceState();
     }
 
     return (void *)(start);
@@ -229,7 +230,6 @@ bool OpenLabel::process(Context & ctx)
       // not implemented yet
   }
   
-  cout << "Label Count: " << label_count << " " << ctx.hdr.datalabel << endl;
   ctx.advance();
 
   return true;
@@ -256,7 +256,6 @@ bool OpenTimeStamp::process(Context & ctx)
         break;
   }
 
-  cout << "timeStamp: " << ctx.hdr.ts << endl;
   ctx.advance();
   return true;
 }
@@ -311,13 +310,14 @@ bool OpenMap::process(Context & ctx)
 
 State * OpenVarTypes::advanceState()
 {
-  return new  OpenVarNames();
+  return new OpenVarNames();
 }
 
 bool OpenVarTypes::process(Context & ctx)
 {
   char * ctxbuf = (char *) ctx.advance();  
   int curr = 0;
+  cout << "open var types" << endl;
 
   if (ctx.hdr.fileByteorder == LSF) {
       
@@ -329,13 +329,13 @@ bool OpenVarTypes::process(Context & ctx)
           curr++;
       }
 
+      cout << "Total variables in dataset: " << curr << endl;
+
   } else {
       // not implemented yet
   }
 
-
   ctx.advance();
-
   return true;
 }
 
@@ -348,7 +348,7 @@ State * OpenVarNames::advanceState()
 
 bool OpenVarNames::process(Context & ctx)
 {
-  char * ctxbuf = (char *) ctx.advance();    
+  char * ctxbuf = (char *) ctx.advance();
   int sz = 0;
   int curr = 0;
 
@@ -361,9 +361,10 @@ bool OpenVarNames::process(Context & ctx)
             // UTF-8
             case R119:
             case R118:
-                      sz = wcslen((wchar_t *)ctxbuf);
+                      sz = strlen(ctxbuf);
+                      /*wcslen((wchar_t *)ctxbuf);*/
                       ((StataVariables *)ctx.vList.at(curr))->varname.assign(&ctxbuf[0],sz);
-                      ctxbuf += 130;
+                      ctxbuf += 129;
                       break;
             // ASCII 
             case R117:
@@ -373,7 +374,7 @@ bool OpenVarNames::process(Context & ctx)
                       break;
           }
 
-          cout << ((StataVariables *)ctx.vList.at(curr))->varname << endl;
+          
           curr++;
       }
   } else {
@@ -396,6 +397,7 @@ bool OpenSortList::process(Context & ctx)
   char * ctxbuf = (char *) ctx.advance();    
   
   // We don't really need the sort list feature for the moment
+  cout << "Ignoring sortlist" << endl;
   ctx.advance(); // </sortlist>
 
 }
@@ -419,8 +421,10 @@ bool OpenFormats::process(Context & ctx)
             // UTF-8
             case R119:
             case R118:
-                sz = wcslen((wchar_t *)ctxbuf);
+                //sz = wcslen((wchar_t *)ctxbuf);
+                sz = strlen((char *)ctxbuf);                
                 ((StataVariables *)ctx.vList.at(curr))->format.assign(&ctxbuf[0],sz);              
+                cout << ((StataVariables *)ctx.vList.at(curr))->format << endl;                                
                 ctxbuf += 57;
                 break;
 
@@ -455,6 +459,7 @@ bool OpenValueLabelNames::process(Context & ctx)
 {
   char * ctxbuf = (char *) ctx.advance();      
   int curr = 0, sz = 0;
+  cout << "OpenValueLabelNames" << endl;
 
   if (ctx.hdr.fileByteorder == LSF) {
 
@@ -465,7 +470,8 @@ bool OpenValueLabelNames::process(Context & ctx)
             // UTF-8
             case R119:
             case R118:
-                sz = wcslen((wchar_t *)ctxbuf);
+                //sz = wcslen((wchar_t *)ctxbuf);
+                sz = strlen((char *)ctxbuf);
                 ((StataVariables *)ctx.vList.at(curr))->vallbl.assign(&ctxbuf[0],sz);              
                 ctxbuf += 129;
                 break;
@@ -474,7 +480,6 @@ bool OpenValueLabelNames::process(Context & ctx)
             case R117:
                 sz = strlen((char *)ctxbuf);
                 ((StataVariables *)ctx.vList.at(curr))->vallbl.assign(&ctxbuf[0],sz);  
-                cout << ((StataVariables *)ctx.vList.at(curr))->vallbl << endl;                
                 ctxbuf += 33;
                 break;
           }          
@@ -497,10 +502,11 @@ bool OpenVariableLabels::process(Context & ctx)
 {
   char * ctxbuf = (char *) ctx.advance();      
   int curr = 0, sz = 0;
+  cout << "OpenVariableLabels" << endl;
 
   if (ctx.hdr.fileByteorder == LSF) {
     
-    while (*ctxbuf != '<') {
+    while (*ctxbuf && *ctxbuf != '<') {
 
       switch(ctx.hdr.fileRelease)
       {
@@ -508,7 +514,8 @@ bool OpenVariableLabels::process(Context & ctx)
           case R118:
 
             if (ctxbuf[0] != 0) {
-              sz = wcslen((wchar_t *)ctxbuf);
+              //sz = wcslen((wchar_t *)ctxbuf);
+              sz = strlen((char *)ctxbuf);
               ((StataVariables *)ctx.vList.at(curr))->varlbl.assign(&ctxbuf[0],sz);  
               cout << ctx.vList.at(curr)->varname << " " << ctx.vList.at(curr)->varlbl << ctx.vList.at(curr)->format << endl;
             }
@@ -552,11 +559,12 @@ bool OpenCharacteristics::process(Context & ctx)
 {
     char * ctxbuf = (char *) ctx.advance();      
     int curr = 0, sz = 0;
+    cout << "openCharacteristics" << ctxbuf << endl;
 
     while(!strcasecmp(ctxbuf, "<ch>"))
     {
         uint32_t * sn = (uint32_t *)ctxbuf;
-
+        cout << "here" << endl;
         if (ctx.hdr.fileByteorder == MSF)
         {
            *sn = ntohl(*sn);
@@ -582,6 +590,7 @@ bool OpenData::process(Context & ctx)
 {
   char * ctxbuf = (char *) ctx.advance();      
   int curr = 0, sz = 0;
+  cout << "OpenData Process" << endl;
   
     if (ctx.hdr.fileByteorder == LSF) {
       

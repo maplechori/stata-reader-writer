@@ -34,6 +34,7 @@ class Context {
      State * currentState;
      bool strls;
      vector<StataVariables *> vList;
+     char * getbuffer() { return &buffer[0]; }
 
      string getChars(int count) 
      {  
@@ -47,7 +48,7 @@ class Context {
    
    private:
      sqlite3 *db;
-     char buffer[4096];
+     char buffer[64000];
      char * cursor;
      char * start;
 };

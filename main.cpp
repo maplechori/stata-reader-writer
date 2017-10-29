@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
     namespace po = boost::program_options;
     Context * ctx = NULL;
 
-    ifstream stfs("export.dta", ios::in | ios::binary);
+    ifstream stfs(argv[1], ios::in | ios::binary);
     std::string stata((std::istreambuf_iterator<char>(stfs)), std::istreambuf_iterator<char>());
 
     ctx = new Context((char *)stata.c_str());

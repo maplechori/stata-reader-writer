@@ -550,7 +550,10 @@ bool OpenVariableLabels::process(Context & ctx)
 
 State * OpenCharacteristics::advanceState()
 {
-  return new OpenData();
+  if (getHasCharacteristics())
+    return new OpenCH();
+  else
+    return new OpenData();
 }
 
 bool OpenCharacteristics::process(Context & ctx)
@@ -558,8 +561,13 @@ bool OpenCharacteristics::process(Context & ctx)
     char * ctxbuf = (char *) ctx.advance();      
     int curr = 0, sz = 0;
     cout << "openCharacteristics" << ctxbuf << endl;
+  
+    if (ctxbuf[0] == '<' && ctxbuf[1] == '/')  
+       setHasCharacteristics(false);
+    else
+       setHasCharacteristics(true);
 
-    while(!strcasecmp(ctxbuf, "<ch>"))
+  /*  while(!strcasecmp(ctxbuf, "<ch>"))
     {
         uint32_t * sn = (uint32_t *)ctxbuf;
         cout << "here" << endl;
@@ -574,9 +582,9 @@ bool OpenCharacteristics::process(Context & ctx)
 
         ctx.advance();
         ctx.advance();
-    }
+    }*/
 
-    ctx.advance();
+    //ctx.advance();
 }
 
 State * OpenCH::advanceState()
@@ -586,7 +594,7 @@ State * OpenCH::advanceState()
 
 bool OpenCH::process(Context & ctx)
 {
-
+    cout << "openCH" << endl;
 }
 
 State * CloseCH::advanceState()

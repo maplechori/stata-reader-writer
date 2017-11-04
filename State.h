@@ -35,6 +35,9 @@ class Context {
      bool strls;
      vector<StataVariables *> vList;
      char * getbuffer() { return &buffer[0]; }
+     char * getCursor() { return cursor; }
+     void advanceNoState(); 
+     void advanceCursor(int c);
 
      string getChars(int count) 
      {  
@@ -125,6 +128,10 @@ class CloseCH : public State {
       bool check(char * buffer) { return CHECK_TAG(XML_CLOSE_CH); }
       State * advanceState();
       bool process(Context & ctx);
+      void setHasCharacteristics(bool v) { hasCharacteristics = v; };
+      bool getHasCharacteristics() { return hasCharacteristics; };
+      private:
+        bool hasCharacteristics;
 };
 
 class OpenTimeStamp : public State {
@@ -184,6 +191,9 @@ class OpenCharacteristics : public State {
        private:
          bool hasCharacteristics;
 };
+
+
+
 
 class OpenData : public State {
        bool check(char * buffer) { return CHECK_TAG(XML_OPEN_DATA); }

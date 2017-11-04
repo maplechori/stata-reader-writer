@@ -10,6 +10,31 @@ void Context::exportToDB(char * filename)
 
 }
 
+void Context::advanceCursor(int c)
+{
+  cursor += c;
+
+  for (start = cursor; cursor && *cursor != '>'; cursor++);
+  
+      if (cursor && *cursor == '>') {
+        cursor++;
+        memset(buffer, 0, sizeof(buffer));
+        strncpy(buffer, start, cursor - start); /* buffer overflow */
+        buffer[cursor-start]='\0';
+      } 
+}
+
+void Context::advanceNoState()
+{
+    for (start = cursor; cursor && *cursor != '>'; cursor++);
+
+    if (cursor && *cursor == '>') {
+      cursor++;
+      memset(buffer, 0, sizeof(buffer));
+      strncpy(buffer, start, cursor - start); /* buffer overflow */
+      buffer[cursor-start]='\0';
+    } 
+}
 
 
 void * Context::advance() {
@@ -17,8 +42,8 @@ void * Context::advance() {
     for (start = cursor; cursor && *cursor != '>'; cursor++);
   
     if (cursor && *cursor == '>') {
-      cout << cursor - start << endl;
       cursor++;
+      memset(buffer, 0, sizeof(buffer));
       strncpy(buffer, start, cursor - start); /* buffer overflow */
       buffer[cursor-start]='\0';
     }
@@ -553,58 +578,84 @@ State * OpenCharacteristics::advanceState()
   if (getHasCharacteristics())
     return new OpenCH();
   else
-    return new OpenData();
+    return new OpenData(); 
 }
 
 bool OpenCharacteristics::process(Context & ctx)
 {
-    char * ctxbuf = (char *) ctx.advance();      
-    int curr = 0, sz = 0;
-    cout << "openCharacteristics" << ctxbuf << endl;
+    char * ctxbuf = (char *) ctx.getCursor();      
   
     if (ctxbuf[0] == '<' && ctxbuf[1] == '/')  
-       setHasCharacteristics(false);
-    else
-       setHasCharacteristics(true);
-
-  /*  while(!strcasecmp(ctxbuf, "<ch>"))
     {
-        uint32_t * sn = (uint32_t *)ctxbuf;
-        cout << "here" << endl;
-        if (ctx.hdr.fileByteorder == MSF)
-        {
-           *sn = ntohl(*sn);
-        }
-
-        ctxbuf += 4;
-        cout << "Characteristics: " << ctxbuf << endl;
-        ctxbuf += *sn;
-
-        ctx.advance();
-        ctx.advance();
-    }*/
-
-    //ctx.advance();
+       setHasCharacteristics(false);
+       ctx.advance();
+       ctx.advance();
+    }
+    else
+    {
+       setHasCharacteristics(true);
+       ctx.advanceNoState();
+    }    
 }
 
 State * OpenCH::advanceState()
 {
-  return new CloseCH();
+   return new CloseCH();
 }
 
 bool OpenCH::process(Context & ctx)
 {
-    cout << "openCH" << endl;
+    char * ctxbuf = ctx.getCursor();
+    int count = 0;
+
+    if (ctx.hdr.fileByteorder == LSF) {
+      
+      while (ctxbuf) { 
+    
+          if (ctxbuf[0] == '<' && 
+              ctxbuf[1] == '/' && 
+              ctxbuf[2] == 'c' && 
+              ctxbuf[3] == 'h' && 
+              ctxbuf[4] == '>' && 
+              ctxbuf[5] == '<')
+          {
+            ctx.advanceCursor(count);
+            ctxbuf = ctx.getCursor();
+            return true; 
+          }
+          
+          ctxbuf++;
+          count++;
+          
+      }
+    }
+    else
+    {
+
+    }
+
+    
 }
 
 State * CloseCH::advanceState()
 {
-  return new OpenData();
+  if (getHasCharacteristics())
+    return new OpenCH();
+  else
+    return new OpenData();
 }
 
 bool CloseCH::process(Context & ctx)
 {
+  char * ctxbuf = (char *) ctx.advance(); 
 
+  if (ctxbuf[0] == '<' && ctxbuf[1] == 'c' && ctxbuf[2] == 'h' && ctxbuf[3] == '>')
+    setHasCharacteristics(true);
+  else
+  {
+    setHasCharacteristics(false);
+    ctx.advance();
+  }
 }
 
 State * OpenData::advanceState()
@@ -616,9 +667,8 @@ bool OpenData::process(Context & ctx)
 {
   char * ctxbuf = (char *) ctx.advance();      
   int curr = 0, sz = 0;
-  cout << "OpenData Process" << endl;
   
-    if (ctx.hdr.fileByteorder == LSF) {
+  if (ctx.hdr.fileByteorder == LSF) {
       
         for (vector<StataVariables *>::iterator it = ctx.vList.begin();  *ctxbuf != '<' && it != ctx.vList.end(); ++it)
         {

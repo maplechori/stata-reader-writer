@@ -51,7 +51,7 @@ class Context {
    
    private:
      sqlite3 *db;
-     char buffer[64000];
+     char buffer[320000];
      char * cursor;
      char * start;
 };
@@ -229,6 +229,11 @@ class OpenInnerValueLabel : public State {
   bool check(char * buffer) { return CHECK_TAG(XML_OPEN_INNER_VALUE_LABELS); }
   State * advanceState();
   bool process(Context & ctx);
+  void setHasMoreLabels(bool v) { hasMoreLabels = v; };
+  bool getHasMoreLabels() { return hasMoreLabels; };
+  private:
+    bool hasMoreLabels;
+
 };
 
 

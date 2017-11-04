@@ -353,8 +353,6 @@ bool OpenVarTypes::process(Context & ctx)
           curr++;
       }
 
-      cout << "Total variables in dataset: " << curr << endl;
-
   } else {
       // not implemented yet
   }
@@ -397,7 +395,6 @@ bool OpenVarNames::process(Context & ctx)
                       ctxbuf += 33;
                       break;
           }
-
           
           curr++;
       }
@@ -418,10 +415,7 @@ State * OpenSortList::advanceState()
 
 bool OpenSortList::process(Context & ctx)
 {
-  char * ctxbuf = (char *) ctx.advance();    
-  
-  // We don't really need the sort list feature for the moment
-  cout << "Ignoring sortlist" << endl;
+  char * ctxbuf = (char *) ctx.advance();      
   ctx.advance(); // </sortlist>
 
 }
@@ -774,10 +768,22 @@ bool CloseValueLabel::process(Context & ctx)
     ctx.advance();
 }
 
+State * CloseInnerValueLabel::advanceState()
+{
+  return NULL;
+}
+
+bool CloseInnerValueLabel::process(Context & ctx)
+{
+  return true;
+}
 
 State * OpenInnerValueLabel::advanceState()
 {
-  return new CloseDTA();
+  if (getHasMoreLabels())
+    return new CloseInnerValueLabel();
+  else
+    return new CloseValueLabel();
 }
 
 bool OpenInnerValueLabel::process(Context & ctx)
@@ -796,6 +802,32 @@ bool OpenInnerValueLabel::process(Context & ctx)
              
             case R119:
             case R118:
+
+            ctxbuf += 4;
+            sz = strlen((char *)ctxbuf);
+            svl->labname.assign(&ctxbuf[0], sz);
+            cout << svl->labname << endl;
+            ctxbuf += 132;
+            entries = GetLSF<unsigned int>(ctxbuf, 4);
+            ctxbuf += 4;
+            txtlen = GetLSF<unsigned int>(ctxbuf, 4);
+            ctxbuf += 4;
+
+            offsets = new int[entries]; 
+
+            for (int i = 0; i < entries; i++, ctxbuf += 4)
+              offsets[i] = GetLSF<int>(ctxbuf, 4);
+
+            txtorig = ctxbuf + (entries * 4);
+            
+            for(int i = 0; i < entries; i++, ctxbuf += 4)
+            {
+                int _of = (i+1 < entries) ? offsets[i+1] - offsets[i] : txtlen - offsets[i];
+                svl->valuelabel[GetLSF<unsigned int>(ctxbuf, 4)].assign((char *)(&txtorig[offsets[i]]), _of );
+                cout << svl->valuelabel[GetLSF<unsigned int>(ctxbuf, 4)] << endl;
+            }
+
+            ctxbuf = txtorig + txtlen;
 
               break;
 
@@ -836,6 +868,9 @@ bool OpenInnerValueLabel::process(Context & ctx)
 
       }
         
+      if (ctxbuf[0] == '<' && ctxbuf[1] == '/' && ctxbuf[2] == 'l')
+        setHasMoreLabels(true);
+      else
+        setHasMoreLabels(false);         
 
-      ctx.advance();
 }

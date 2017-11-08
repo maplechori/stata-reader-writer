@@ -34,7 +34,7 @@ public:
 private:
     char *c;
     char *start;
-    char buffer[4096];
+    char buffer[8192];
     unsigned short ops;
 
 };

@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
     ifstream stfs(argv[1], ios::in | ios::binary);
     std::string stata((std::istreambuf_iterator<char>(stfs)), std::istreambuf_iterator<char>());
 
-    ctx = new Context((char *)stata.c_str());
+    ctx = new Context((char *)stata.c_str(), stata.length());
 
     if (ctx != NULL)
       ctx->advance();

@@ -27,15 +27,17 @@ class State
 class Context {
    
    public: 
-     Context(char * cursor);
+     Context(char * cursor, int length);
      void * advance();
      StataHeader hdr;
      StataMap map;
      State * currentState;
      bool strls;
+     char * origin;
      vector<StataVariables *> vList;
      char * getbuffer() { return &buffer[0]; }
      char * getCursor() { return cursor; }
+     void setCursor(char * cursor) { this->cursor = cursor; } 
      void advanceNoState(); 
      void advanceCursor(int c);
 
@@ -51,9 +53,10 @@ class Context {
    
    private:
      sqlite3 *db;
-     char buffer[320000];
+     char buffer[1000000];
      char * cursor;
      char * start;
+     int length;
 };
 
 
@@ -65,7 +68,7 @@ class OpenDTA : public State {
 
 
 class CloseDTA : public State {
-  bool check(char * buffer) { return CHECK_TAG(XML_OPEN_FILE); }
+  bool check(char * buffer) { return CHECK_TAG(XML_CLOSE_FILE); }
   State * advanceState();
   bool process(Context & ctx);
 };
@@ -201,6 +204,8 @@ class OpenData : public State {
        bool process(Context & ctx);
 };
 
+
+
 class OpenSTRL : public State {
   bool check(char * buffer) { return CHECK_TAG(XML_OPEN_STRLS); }
   State * advanceState();
@@ -226,7 +231,7 @@ class CloseValueLabel : public State {
 
 
 class OpenInnerValueLabel : public State {
-  bool check(char * buffer) { return CHECK_TAG(XML_OPEN_INNER_VALUE_LABELS); }
+  bool check(char * buffer) {  return CHECK_TAG(XML_OPEN_INNER_VALUE_LABELS); }
   State * advanceState();
   bool process(Context & ctx);
   void setHasMoreLabels(bool v) { hasMoreLabels = v; };
@@ -236,9 +241,3 @@ class OpenInnerValueLabel : public State {
 
 };
 
-
-class CloseInnerValueLabel : public State {
-  bool check(char * buffer) { return CHECK_TAG(XML_CLOSE_INNER_VALUE_LABELS); }
-  State * advanceState();
-  bool process(Context & ctx);
-};

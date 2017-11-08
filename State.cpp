@@ -1,7 +1,9 @@
 #include "State.h"
 
-Context::Context(char * cursor) : start(0), strls(false) {
+Context::Context(char * cursor, int length) : start(0), strls(false) {
+   this->origin = cursor;
    this->cursor = cursor;
+   this->length = length;
    this->currentState = new OpenDTA();
 }
 
@@ -12,6 +14,9 @@ void Context::exportToDB(char * filename)
 
 void Context::advanceCursor(int c)
 {
+  if ((cursor - origin) >= length)
+    return;
+  
   cursor += c;
 
   for (start = cursor; cursor && *cursor != '>'; cursor++);
@@ -26,6 +31,9 @@ void Context::advanceCursor(int c)
 
 void Context::advanceNoState()
 {
+    if ((cursor - origin) >= length)
+      return;
+
     for (start = cursor; cursor && *cursor != '>'; cursor++);
 
     if (cursor && *cursor == '>') {
@@ -39,19 +47,29 @@ void Context::advanceNoState()
 
 void * Context::advance() {
 
+    if ((cursor - origin) >= length)
+      return NULL;
+
     for (start = cursor; cursor && *cursor != '>'; cursor++);
   
     if (cursor && *cursor == '>') {
       cursor++;
       memset(buffer, 0, sizeof(buffer));
       strncpy(buffer, start, cursor - start); /* buffer overflow */
-      buffer[cursor-start]='\0';
+      buffer[cursor-start]='\0';         
     }
 
-    while(currentState->check(buffer))
+    while(currentState && currentState->check(buffer))
     {   
-        currentState->process(*this);
-        currentState = currentState->advanceState();
+          currentState->process(*this);
+
+          if (currentState)
+          {
+              State * newState = currentState->advanceState();
+              delete currentState;
+              currentState = newState;
+          }
+
     }
 
     return (void *)(start);
@@ -70,11 +88,13 @@ State * OpenDTA::advanceState() {
 
 bool CloseDTA::process(Context & ctx) 
 {
-   ctx.advance();
+   cout << "CloseDTA::process" << endl;
+   //ctx.advance();
    return true;
 }
 
 State * CloseDTA::advanceState() { 
+   cout << "CloseDTA::advanceState " << endl;
    return NULL;
 }
 
@@ -519,7 +539,6 @@ bool OpenVariableLabels::process(Context & ctx)
 {
   char * ctxbuf = (char *) ctx.advance();      
   int curr = 0, sz = 0;
-  cout << "OpenVariableLabels" << endl;
 
   if (ctx.hdr.fileByteorder == LSF) {
     
@@ -760,28 +779,19 @@ bool OpenValueLabel::process(Context & ctx)
 
 State * CloseValueLabel::advanceState()
 {
-  return NULL;
+  return new CloseDTA();
 }
 
 bool CloseValueLabel::process(Context & ctx)
 {
-    ctx.advance();
+  ctx.advance();
 }
 
-State * CloseInnerValueLabel::advanceState()
-{
-  return NULL;
-}
-
-bool CloseInnerValueLabel::process(Context & ctx)
-{
-  return true;
-}
 
 State * OpenInnerValueLabel::advanceState()
 {
   if (getHasMoreLabels())
-    return new CloseInnerValueLabel();
+    return new OpenInnerValueLabel();
   else
     return new CloseValueLabel();
 }
@@ -790,49 +800,52 @@ bool OpenInnerValueLabel::process(Context & ctx)
 {
     char * ctxbuf = (char *) ctx.advance(); 
     char * txtorig = NULL;      
-    int curr = 0, sz = 0, entries = 0, txtlen = 0, * offsets = NULL;
+    int curr = 0, sz = 0, totalSize = 0, entries = 0, txtlen = 0, * offsets = NULL;
     StataValueLabel * svl = new StataValueLabel();
 
+    
+
      if (ctx.hdr.fileByteorder == LSF) {
-        
-        while (*ctxbuf != '<') {
-          
+
           switch(ctx.hdr.fileRelease)
           {
              
             case R119:
             case R118:
 
+            cout << "Length value label table: " << GetLSF<unsigned int>(ctxbuf, 4) << endl; // += 4;
+            totalSize = GetLSF<unsigned int>(ctxbuf, 4);
             ctxbuf += 4;
             sz = strlen((char *)ctxbuf);
+            cout << "SZ: " << sz << endl;
             svl->labname.assign(&ctxbuf[0], sz);
             cout << svl->labname << endl;
             ctxbuf += 132;
             entries = GetLSF<unsigned int>(ctxbuf, 4);
+            cout << "entries: " << entries << endl;
             ctxbuf += 4;
             txtlen = GetLSF<unsigned int>(ctxbuf, 4);
+            cout << "txtlen: " << txtlen << endl;
             ctxbuf += 4;
 
             offsets = new int[entries]; 
 
-            for (int i = 0; i < entries; i++, ctxbuf += 4)
+            for (int i = 0; i < entries; ctxbuf += 4, i++)
               offsets[i] = GetLSF<int>(ctxbuf, 4);
-
+      
             txtorig = ctxbuf + (entries * 4);
             
             for(int i = 0; i < entries; i++, ctxbuf += 4)
-            {
-                int _of = (i+1 < entries) ? offsets[i+1] - offsets[i] : txtlen - offsets[i];
-                svl->valuelabel[GetLSF<unsigned int>(ctxbuf, 4)].assign((char *)(&txtorig[offsets[i]]), _of );
-                cout << svl->valuelabel[GetLSF<unsigned int>(ctxbuf, 4)] << endl;
+            {          
+                svl->valuelabel[GetLSF<unsigned int>(ctxbuf, 4)].assign((char *)(&txtorig[offsets[i]]), strlen(&txtorig[offsets[i]]));
+                cout << "[6] " << svl->valuelabel[GetLSF<unsigned int>(ctxbuf, 4)] << endl;
             }
 
-            ctxbuf = txtorig + txtlen;
-
-              break;
+            ctxbuf += txtlen;
+            break;
 
             case R117:  
-
+                    totalSize = GetLSF<unsigned int>(ctxbuf, 4);
                     ctxbuf += 4;
                     sz = strlen((char *)ctxbuf);
                     svl->labname.assign(&ctxbuf[0], sz);
@@ -845,32 +858,42 @@ bool OpenInnerValueLabel::process(Context & ctx)
 
                     offsets = new int[entries]; 
 
-                    for (int i = 0; i < entries; i++, ctxbuf += 4)
-                      offsets[i] = GetLSF<int>(ctxbuf, 4);
+                    for (int i = 0; i < entries; ctxbuf += 4, i++)
+                    offsets[i] = GetLSF<int>(ctxbuf, 4);
+            
+      
+                  txtorig = ctxbuf + (entries * 4);
+      
+              
+                  
+                  for(int i = 0; i < entries; i++, ctxbuf += 4)
+                  {          
+                      svl->valuelabel[GetLSF<unsigned int>(ctxbuf, 4)].assign((char *)(&txtorig[offsets[i]]), strlen(&txtorig[offsets[i]]));
+                      cout << "[6] " << svl->valuelabel[GetLSF<unsigned int>(ctxbuf, 4)] << endl;
+                  }
+                    ctxbuf += txtlen;
+                break;
 
-                    txtorig = ctxbuf + (entries * 4);
-                    
-                    for(int i = 0; i < entries; i++, ctxbuf += 4)
-                    {
-                        int _of = (i+1 < entries) ? offsets[i+1] - offsets[i] : txtlen - offsets[i];
-                        svl->valuelabel[GetLSF<unsigned int>(ctxbuf, 4)].assign((char *)(&txtorig[offsets[i]]), _of );
-                        cout << svl->valuelabel[GetLSF<unsigned int>(ctxbuf, 4)] << endl;
-                    }
-
-                    ctxbuf = txtorig + txtlen;
-              break;
-
-           }
+           
         }
       }
       else
       {
 
       }
-        
-      if (ctxbuf[0] == '<' && ctxbuf[1] == '/' && ctxbuf[2] == 'l')
+            
+      if (ctxbuf[0] == '<' && ctxbuf[1] == '/' && ctxbuf[2] == 'l' && ctxbuf[6] == '<' && ctxbuf[8] != 'v' )
+      {
         setHasMoreLabels(true);
+        cout << "HAS MORE LABELS" << endl;
+        ctx.advance();   
+        ctx.advance();  
+      }
       else
-        setHasMoreLabels(false);         
+      {
+        cout << "NO MORE LABELS" << endl;
+        setHasMoreLabels(false);
+      }
 
+       return true;
 }

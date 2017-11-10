@@ -1,3 +1,4 @@
+TARGETS=main test
 CC=g++
 CFLAGS=
 DEBUG=-g
@@ -11,7 +12,7 @@ SOURCES_TEST += StataTest.cpp
 OBJECTS_TEST=$(SOURCES_TEST:.c=.o)
 EXECUTABLE_TEST = main_test
 
-all: $(SOURCES) $(EXECUTABLE) 
+all: $(TARGETS)
 
 $(EXECUTABLE): $(OBJECTS)
 	@echo 'Building target: $@. First dep: $<'

@@ -13,7 +13,7 @@
 #include <cstdio>
 #include <boost/regex.hpp>
 #include <boost/variant.hpp>
-#include <boost/program_options.hpp> 
+#include <boost/program_options.hpp>
 #include <list>
 #include <boost/asio.hpp>
 #include "StataHeader.h"
@@ -28,17 +28,16 @@ using boost::asio::ip::tcp;
 
 unsigned short ops;
 
-int main(int argc, char** argv) {
-    namespace po = boost::program_options;
-    Context * ctx = NULL;
+int main(int argc, char **argv)
+{
+  namespace po = boost::program_options;
+  Context *ctx = NULL;
 
-    ifstream stfs(argv[1], ios::in | ios::binary);
-    std::string stata((std::istreambuf_iterator<char>(stfs)), std::istreambuf_iterator<char>());
+  ifstream stfs(argv[1], ios::in | ios::binary);
+  std::string stata((std::istreambuf_iterator<char>(stfs)), std::istreambuf_iterator<char>());
 
-    ctx = new Context((char *)stata.c_str(), stata.length());
+  ctx = new Context((char *)stata.c_str(), stata.length());
 
-    if (ctx != NULL)
-      ctx->advance();
-
+  if (ctx != NULL)
+    ctx->advance();
 }
-

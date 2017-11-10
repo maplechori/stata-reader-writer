@@ -365,15 +365,65 @@ bool OpenVarTypes::process(Context &ctx)
 {
   char *ctxbuf = (char *)ctx.advance();
   int curr = 0;
+  StataVariablesImpl<double> *sta_double;
+  StataVariablesImpl<float> *sta_float;
+  StataVariablesImpl<long> *sta_long;
+  StataVariablesImpl<int> *sta_integer;
+  StataVariablesImpl<char> *sta_byte;
+  StataVariablesImpl<string> *sta_char;
 
   if (ctx.hdr.fileByteorder == LSF)
   {
 
     while (*ctxbuf != '<')
     {
-      StataVariablesImpl<unsigned int>* sta = new StataVariablesImpl<unsigned int>();
-      sta->type = GetLSF<unsigned int>(ctxbuf, 2);
-      ctx.vList.push_back(boost::shared_ptr<StataVariables>(sta));
+      int stataType = GetLSF<unsigned int>(ctxbuf, 2);
+
+      switch (stataType)
+      {
+      case ST_STRL:
+        cout << "STRL" << endl;
+
+        // handle STRLs
+        break;
+      case ST_DOUBLE:
+        cout << "DOUBLE" << endl;
+        sta_double = new StataVariablesImpl<double>();
+        ctx.vList.push_back(boost::shared_ptr<StataVariables>(sta_double));
+        break;
+      case ST_FLOAT:
+        cout << "FLOAT" << endl;
+        sta_float = new StataVariablesImpl<float>();
+        ctx.vList.push_back(boost::shared_ptr<StataVariables>(sta_float));
+        break;
+      case ST_LONG:
+        cout << "LONG" << endl;
+        sta_long = new StataVariablesImpl<long>();
+        ctx.vList.push_back(boost::shared_ptr<StataVariables>(sta_long));
+        break;
+      case ST_INT:
+        cout << "INTEGER" << endl;
+        sta_integer = new StataVariablesImpl<int>();
+        ctx.vList.push_back(boost::shared_ptr<StataVariables>(sta_integer));
+        break;
+      case ST_BYTE:
+        cout << "BYTE" << endl;
+        sta_byte = new StataVariablesImpl<char>();
+        ctx.vList.push_back(boost::shared_ptr<StataVariables>(sta_byte));
+
+        break;
+      default:
+        if (stataType > 0 && stataType <= 2045)
+        {
+          cout << "STRING OF LENGTH " << stataType << endl;
+          sta_char = new StataVariablesImpl<string>();
+          ctx.vList.push_back(boost::shared_ptr<StataVariables>(sta_char));
+        }
+        else
+          cout << "UNKNOWN TYPE" << endl;
+        break;
+      }
+
       ctxbuf += 2;
       curr++;
     }
@@ -692,7 +742,7 @@ bool OpenData::process(Context &ctx)
 
   if (ctx.hdr.fileByteorder == LSF)
   {
-    vector< boost::shared_ptr<StataVariables> >::iterator it;
+    vector<boost::shared_ptr<StataVariables> >::iterator it;
 
     for (it = ctx.vList.begin(); *ctxbuf != '<' && it != ctx.vList.end(); ++it)
     {
@@ -706,6 +756,8 @@ bool OpenData::process(Context &ctx)
         break;
       case ST_DOUBLE:
         cout << "DOUBLE" << endl;
+        //StataVariablesImpl<double> o;
+
         ctxbuf += 8;
         break;
       case ST_FLOAT:
@@ -722,6 +774,7 @@ bool OpenData::process(Context &ctx)
         break;
       case ST_BYTE:
         cout << "BYTE" << endl;
+
         ctxbuf++;
         break;
       default:

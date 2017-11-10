@@ -9,6 +9,9 @@
 #define	STATAVARIABLES_H
 
 #include <string>
+#include <iostream>
+
+using namespace std;
 
 class StataVariables{
 public:
@@ -26,7 +29,7 @@ class StataVariablesImpl : public StataVariables {
 public:
     StataVariablesImpl() {};
     StataVariablesImpl(const StataVariablesImpl& orig) {};
-    virtual ~StataVariablesImpl() {};
+    virtual ~StataVariablesImpl() { cout << "cleaning" << endl;};
     T getValue() { return value; };
     void setValue(T t) { value = t; }
 private:

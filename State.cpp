@@ -389,38 +389,43 @@ bool OpenVarTypes::process(Context &ctx)
       case ST_DOUBLE:
         cout << "DOUBLE" << endl;
         sta_double = new StataVariablesImpl<double>();
+        sta_double->type = stataType;
         ctx.vList.push_back(boost::shared_ptr<StataVariables>(sta_double));
         break;
       case ST_FLOAT:
         cout << "FLOAT" << endl;
         sta_float = new StataVariablesImpl<float>();
+        sta_float->type = stataType;
         ctx.vList.push_back(boost::shared_ptr<StataVariables>(sta_float));
         break;
       case ST_LONG:
         cout << "LONG" << endl;
         sta_long = new StataVariablesImpl<long>();
+        sta_long->type = stataType;
         ctx.vList.push_back(boost::shared_ptr<StataVariables>(sta_long));
         break;
       case ST_INT:
         cout << "INTEGER" << endl;
         sta_integer = new StataVariablesImpl<int>();
+        sta_integer->type = stataType;
         ctx.vList.push_back(boost::shared_ptr<StataVariables>(sta_integer));
         break;
       case ST_BYTE:
-        cout << "BYTE" << endl;
+        cout << "BYTE" << endl;      
         sta_byte = new StataVariablesImpl<char>();
+        sta_byte->type = stataType;
         ctx.vList.push_back(boost::shared_ptr<StataVariables>(sta_byte));
-
         break;
       default:
-        if (stataType > 0 && stataType <= 2045)
-        {
-          cout << "STRING OF LENGTH " << stataType << endl;
-          sta_char = new StataVariablesImpl<string>();
-          ctx.vList.push_back(boost::shared_ptr<StataVariables>(sta_char));
-        }
-        else
-          cout << "UNKNOWN TYPE" << endl;
+          if (stataType > 0 && stataType <= 2045)
+          {
+            cout << "STRING OF LENGTH " << stataType << endl;
+            sta_char = new StataVariablesImpl<string>();
+            sta_char->type = stataType;
+            ctx.vList.push_back(boost::shared_ptr<StataVariables>(sta_char));
+          }
+          else
+            cout << "UNKNOWN TYPE " << hex << stataType << endl;
         break;
       }
 

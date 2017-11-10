@@ -7,16 +7,4 @@
 
 #include "StataVariables.h"
 
-StataVariables::StataVariables() {
-    
-    
-}
-
-StataVariables::StataVariables(const StataVariables& orig) 
-{
-    
-}
-
-StataVariables::~StataVariables() {
-}
 

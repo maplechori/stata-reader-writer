@@ -1,6 +1,7 @@
 
 #include <vector>
 #include <string.h>
+#include <memory>
 #include <sqlite3.h>
 #include "StataHeader.h"
 #include "StataVariables.h"
@@ -34,7 +35,7 @@ class Context {
      State * currentState;
      bool strls;
      char * origin;
-     vector<StataVariables *> vList;
+     vector<boost::shared_ptr<StataVariables> > vList;
      char * getbuffer() { return &buffer[0]; }
      char * getCursor() { return cursor; }
      void setCursor(char * cursor) { this->cursor = cursor; } 

@@ -1,656 +1,603 @@
 #include "State.h"
 
-Context::Context(char * cursor, int length) : start(0), strls(false) {
-   this->origin = cursor;
-   this->cursor = cursor;
-   this->length = length;
-   this->currentState = new OpenDTA();
+Context::Context(char *cursor, int length) : start(0), strls(false)
+{
+  this->origin = cursor;
+  this->cursor = cursor;
+  this->length = length;
+  this->currentState = new OpenDTA();
 }
 
-void Context::exportToDB(char * filename)
+void Context::exportToDB(char *filename)
 {
-
 }
 
 void Context::advanceCursor(int c)
 {
   if ((cursor - origin) >= length)
     return;
-  
+
   cursor += c;
 
-  for (start = cursor; cursor && *cursor != '>'; cursor++);
-  
-      if (cursor && *cursor == '>') {
-        cursor++;
-        memset(buffer, 0, sizeof(buffer));
-        strncpy(buffer, start, cursor - start); /* buffer overflow */
-        buffer[cursor-start]='\0';
-      } 
+  for (start = cursor; cursor && *cursor != '>'; cursor++)
+    ;
+
+  if (cursor && *cursor == '>')
+  {
+    cursor++;
+    memset(buffer, 0, sizeof(buffer));
+    strncpy(buffer, start, cursor - start); /* buffer overflow */
+    buffer[cursor - start] = '\0';
+  }
 }
 
 void Context::advanceNoState()
 {
-    if ((cursor - origin) >= length)
-      return;
+  if ((cursor - origin) >= length)
+    return;
 
-    for (start = cursor; cursor && *cursor != '>'; cursor++);
+  for (start = cursor; cursor && *cursor != '>'; cursor++)
+    ;
 
-    if (cursor && *cursor == '>') {
-      cursor++;
-      memset(buffer, 0, sizeof(buffer));
-      strncpy(buffer, start, cursor - start); /* buffer overflow */
-      buffer[cursor-start]='\0';
-    } 
+  if (cursor && *cursor == '>')
+  {
+    cursor++;
+    memset(buffer, 0, sizeof(buffer));
+    strncpy(buffer, start, cursor - start); /* buffer overflow */
+    buffer[cursor - start] = '\0';
+  }
 }
 
+void *Context::advance()
+{
 
-void * Context::advance() {
+  if ((cursor - origin) >= length)
+    return NULL;
 
-    if ((cursor - origin) >= length)
-      return NULL;
+  for (start = cursor; cursor && *cursor != '>'; cursor++)
+    ;
 
-    for (start = cursor; cursor && *cursor != '>'; cursor++);
-  
-    if (cursor && *cursor == '>') {
-      cursor++;
-      memset(buffer, 0, sizeof(buffer));
-      strncpy(buffer, start, cursor - start); /* buffer overflow */
-      buffer[cursor-start]='\0';         
+  if (cursor && *cursor == '>')
+  {
+    cursor++;
+    memset(buffer, 0, sizeof(buffer));
+    strncpy(buffer, start, cursor - start); /* buffer overflow */
+    buffer[cursor - start] = '\0';
+  }
+
+  while (currentState && currentState->check(buffer))
+  {
+    currentState->process(*this);
+
+    if (currentState)
+    {
+      State *newState = currentState->advanceState();
+      delete currentState;
+      currentState = newState;
     }
+  }
 
-    while(currentState && currentState->check(buffer))
-    {   
-          currentState->process(*this);
-
-          if (currentState)
-          {
-              State * newState = currentState->advanceState();
-              delete currentState;
-              currentState = newState;
-          }
-
-    }
-
-    return (void *)(start);
+  return (void *)(start);
 }
 
 // OpenDTA State
-bool OpenDTA::process(Context & ctx) 
+bool OpenDTA::process(Context &ctx)
 {
-   ctx.advance();
-   return true;
+  ctx.advance();
+  return true;
 }
 
-State * OpenDTA::advanceState() { 
-   return new OpenHeader();
-}
-
-bool CloseDTA::process(Context & ctx) 
+State *OpenDTA::advanceState()
 {
-   cout << "CloseDTA::process" << endl;
-   //ctx.advance();
-   return true;
+  return new OpenHeader();
 }
 
-State * CloseDTA::advanceState() { 
-   cout << "CloseDTA::advanceState " << endl;
-   return NULL;
-}
-
-
-// OpenHeader State 
-bool OpenHeader::process(Context & ctx)
+bool CloseDTA::process(Context &ctx)
 {
-     ctx.advance();
-     return true;
+  return true;
 }
 
-State * OpenHeader::advanceState()
+State *CloseDTA::advanceState()
+{
+  cout << "DONE " << endl;
+  return NULL;
+}
+
+// OpenHeader State
+bool OpenHeader::process(Context &ctx)
+{
+  ctx.advance();
+  return true;
+}
+
+State *OpenHeader::advanceState()
 {
   return new OpenRelease();
 }
 
 // OpenRelease State
-State * OpenRelease::advanceState() {
+State *OpenRelease::advanceState()
+{
   return new OpenByteOrder();
 }
 
-bool OpenRelease::process(Context & ctx)
+bool OpenRelease::process(Context &ctx)
 {
-     string version = ctx.getChars(3);
-     cout << version << endl;
-     switch(strtol(version.c_str(), NULL, 10))
-     {
-        case 119:
-        case 118:
-              ctx.hdr.fileRelease = R119;
-              break;
-	      case 117: 
-               ctx.hdr.fileRelease = R117;
-               break;
+  string version = ctx.getChars(3);
+  cout << version << endl;
+  switch (strtol(version.c_str(), NULL, 10))
+  {
+  case 119:
+  case 118:
+    ctx.hdr.fileRelease = R119;
+    break;
+  case 117:
+    ctx.hdr.fileRelease = R117;
+    break;
 
-        default:
-               ctx.hdr.fileRelease = R117;
-               break;
+  default:
+    ctx.hdr.fileRelease = R117;
+    break;
+  }
 
-     }
-     
-     ctx.advance(); // CONTENT 
-     ctx.advance(); // </release>
-     return true;
+  ctx.advance(); // CONTENT
+  ctx.advance(); // </release>
+  return true;
 }
 
 // OpenByteOrder State
-State * OpenByteOrder::advanceState() 
+State *OpenByteOrder::advanceState()
 {
   return new OpenK();
 }
 
-bool OpenByteOrder::process(Context & ctx) 
+bool OpenByteOrder::process(Context &ctx)
 {
-      string byteOrder = ctx.getChars(3);
- 
-      if (!strcasecmp(byteOrder.c_str(), XML_LSF))
-        ctx.hdr.fileByteorder = LSF;
-      else
-        ctx.hdr.fileByteorder = MSF;
-     
-      ctx.advance(); // ORDER 
-      ctx.advance(); // </byteorder>
-      
-      return true;
+  string byteOrder = ctx.getChars(3);
+
+  if (!strcasecmp(byteOrder.c_str(), XML_LSF))
+    ctx.hdr.fileByteorder = LSF;
+  else
+    ctx.hdr.fileByteorder = MSF;
+
+  ctx.advance(); // ORDER
+  ctx.advance(); // </byteorder>
+
+  return true;
 }
 
 // OpenK State
-State * OpenK::advanceState()
+State *OpenK::advanceState()
 {
   return new OpenN();
 }
 
-bool OpenK::process(Context & ctx)
+bool OpenK::process(Context &ctx)
 {
-    
-    if (ctx.hdr.fileByteorder == LSF) {
-        char * ctxbuf = (char *) ctx.advance();
-       
-        switch(ctx.hdr.fileRelease)
-        {
-          // 4 byte
-          case R119:
-          case R118:
-                ctx.hdr.variables = GetLSF<int>(ctxbuf, 4);
-                break;
 
-          // 2 byte
-          case R117:
-               ctx.hdr.variables = GetLSF<int>(ctxbuf, 2); 
-               break;
+  if (ctx.hdr.fileByteorder == LSF)
+  {
+    char *ctxbuf = (char *)ctx.advance();
 
-          default: 
+    switch (ctx.hdr.fileRelease)
+    {
+    // 4 byte
+    case R119:
+    case R118:
+      ctx.hdr.variables = GetLSF<int>(ctxbuf, 4);
+      break;
 
-                break;
-        }
+    // 2 byte
+    case R117:
+      ctx.hdr.variables = GetLSF<int>(ctxbuf, 2);
+      break;
 
-    } else {
-         // MSF not implemented yet
-    } 
+    default:
 
-    ctx.advance();
+      break;
+    }
+  }
+  else
+  {
+    // MSF not implemented yet
+  }
 
-    return true;
+  ctx.advance();
+
+  return true;
 }
 
 // OpenN State
-State * OpenN::advanceState()
+State *OpenN::advanceState()
 {
   return new OpenLabel();
 }
 
-bool OpenN::process(Context & ctx)
+bool OpenN::process(Context &ctx)
 {
-    char * ctxbuf = (char *) ctx.advance();
-    
-    if (ctx.hdr.fileByteorder == LSF) 
-    {
-      switch(ctx.hdr.fileRelease)
-      {
-        // 8 byte
-        case R119:
-        case R118:
-              ctx.hdr.observations = GetLSF<uint64_t>(ctxbuf, 8);
-              break;
-        
-        // 4 byte
-        case R117:
-            ctx.hdr.observations = GetLSF<int>(ctxbuf, 4); 
-            break;
+  char *ctxbuf = (char *)ctx.advance();
 
-        default: 
-             break;
-       } 
-    }
-    else 
+  if (ctx.hdr.fileByteorder == LSF)
+  {
+    switch (ctx.hdr.fileRelease)
     {
-        // MSF not implemented yet
+    // 8 byte
+    case R119:
+    case R118:
+      ctx.hdr.observations = GetLSF<uint64_t>(ctxbuf, 8);
+      break;
+
+    // 4 byte
+    case R117:
+      ctx.hdr.observations = GetLSF<int>(ctxbuf, 4);
+      break;
+
+    default:
+      break;
     }
-    
-    cout << "Observations: " << ctx.hdr.observations << endl; 
-    ctx.advance();
-    return true;
+  }
+  else
+  {
+    // MSF not implemented yet
+  }
+
+  ctx.advance();
+  return true;
 }
 
 // OpenLabel State
-State * OpenLabel::advanceState()
+State *OpenLabel::advanceState()
 {
   return new OpenTimeStamp();
 }
 
-bool OpenLabel::process(Context & ctx)
+bool OpenLabel::process(Context &ctx)
 {
-  char * ctxbuf = (char *) ctx.advance();
+  char *ctxbuf = (char *)ctx.advance();
   int label_count = 0;
 
   if (ctx.hdr.fileByteorder == LSF)
   {
-    switch(ctx.hdr.fileRelease)
+    switch (ctx.hdr.fileRelease)
     {
-      case R119:
-      case R118:
-          label_count = GetLSF<int>(ctxbuf, 2); 
-          ctx.hdr.datalabel.assign(&ctxbuf[2],label_count);
-          break;
-      
-      case R117:
-          label_count = GetLSF<int>(ctxbuf, 1);
-          ctx.hdr.datalabel.assign(&ctxbuf[1],label_count);
-          break;
+    case R119:
+    case R118:
+      label_count = GetLSF<int>(ctxbuf, 2);
+      ctx.hdr.datalabel.assign(&ctxbuf[2], label_count);
+      break;
 
-      default: 
-           break;
-     } 
+    case R117:
+      label_count = GetLSF<int>(ctxbuf, 1);
+      ctx.hdr.datalabel.assign(&ctxbuf[1], label_count);
+      break;
+
+    default:
+      break;
+    }
   }
   else
   {
-      // not implemented yet
+    // not implemented yet
   }
-  
+
   ctx.advance();
 
   return true;
 }
 
-State * OpenTimeStamp::advanceState()
+State *OpenTimeStamp::advanceState()
 {
   return new CloseHeader();
 }
 
-bool OpenTimeStamp::process(Context & ctx)
+bool OpenTimeStamp::process(Context &ctx)
 {
-  char * ctxbuf = (char *) ctx.advance();
+  char *ctxbuf = (char *)ctx.advance();
   int label_count = 0;
 
-  switch(ctx.hdr.fileRelease)
+  switch (ctx.hdr.fileRelease)
   {
 
-    case R119:
-    case R118:
-    case R117:
-        label_count = GetLSF<int>(ctxbuf, 1); 
-        ctx.hdr.ts.assign(&ctxbuf[1],label_count);
-        break;
+  case R119:
+  case R118:
+  case R117:
+    label_count = GetLSF<int>(ctxbuf, 1);
+    ctx.hdr.ts.assign(&ctxbuf[1], label_count);
+    break;
   }
 
   ctx.advance();
   return true;
 }
 
-State * CloseHeader::advanceState()
+State *CloseHeader::advanceState()
 {
   return new OpenMap();
 }
 
-bool CloseHeader::process(Context & ctx)
+bool CloseHeader::process(Context &ctx)
 {
   ctx.advance();
   return true;
 }
 
-State * OpenMap::advanceState()
+State *OpenMap::advanceState()
 {
   return new OpenVarTypes();
 }
 
-bool OpenMap::process(Context & ctx)
+bool OpenMap::process(Context &ctx)
 {
-    #define MAP_COUNT 14
-    char * ctxbuf = (char *)ctx.advance();
-    int i, j;
-   
-    string map_names[] = {
-        "stata_data_start", 
-        "map",
-        "variable_types",
-        "varnames",
-        "sortlist",
-        "formats",
-        "value_label_names",
-        "variable_labels",
-        "characteristics",
-        "data",
-        "strls",
-        "value_labels",
-        "stata_data_end",
-        "eof"
-    };
+#define MAP_COUNT 14
+  char *ctxbuf = (char *)ctx.advance();
+  int i, j;
 
-    for (i = 0; i < MAP_COUNT; i++, ctxbuf += 8)
-        ctx.map.stata_map[map_names[i].c_str()] = GetLSF<uint64_t>(ctxbuf, 8);   
-    
-    ctx.advance();
+  string map_names[] = {
+      "stata_data_start",
+      "map",
+      "variable_types",
+      "varnames",
+      "sortlist",
+      "formats",
+      "value_label_names",
+      "variable_labels",
+      "characteristics",
+      "data",
+      "strls",
+      "value_labels",
+      "stata_data_end",
+      "eof"};
 
-    return true;
+  for (i = 0; i < MAP_COUNT; i++, ctxbuf += 8)
+    ctx.map.stata_map[map_names[i].c_str()] = GetLSF<uint64_t>(ctxbuf, 8);
 
+  ctx.advance();
+
+  return true;
 }
 
-State * OpenVarTypes::advanceState()
+State *OpenVarTypes::advanceState()
 {
   return new OpenVarNames();
 }
 
-bool OpenVarTypes::process(Context & ctx)
+bool OpenVarTypes::process(Context &ctx)
 {
-  char * ctxbuf = (char *) ctx.advance();  
+  char *ctxbuf = (char *)ctx.advance();
   int curr = 0;
 
-  if (ctx.hdr.fileByteorder == LSF) {
-      
-     while (*ctxbuf != '<') {
-          StataVariables * sta = new StataVariables();          
-          sta->type = GetLSF<unsigned int>(ctxbuf, 2);
-          ctx.vList.push_back(sta);
-          ctxbuf += 2;
-          curr++;
-      }
+  if (ctx.hdr.fileByteorder == LSF)
+  {
 
-  } else {
-      // not implemented yet
+    while (*ctxbuf != '<')
+    {
+      StataVariablesImpl<unsigned int>* sta = new StataVariablesImpl<unsigned int>();
+      sta->type = GetLSF<unsigned int>(ctxbuf, 2);
+      ctx.vList.push_back(boost::shared_ptr<StataVariables>(sta));
+      ctxbuf += 2;
+      curr++;
+    }
+  }
+  else
+  {
+    // not implemented yet
   }
 
   ctx.advance();
   return true;
 }
 
-
-
-State * OpenVarNames::advanceState()
+State *OpenVarNames::advanceState()
 {
   return new OpenSortList();
 }
 
-bool OpenVarNames::process(Context & ctx)
+bool OpenVarNames::process(Context &ctx)
 {
-  char * ctxbuf = (char *) ctx.advance();
+  char *ctxbuf = (char *)ctx.advance();
   int sz = 0;
   int curr = 0;
 
-  if (ctx.hdr.fileByteorder == LSF) {
+  if (ctx.hdr.fileByteorder == LSF)
+  {
 
-      while (*ctxbuf != '<') {
-     
-          switch(ctx.hdr.fileRelease)
-          { 
-            // UTF-8
-            case R119:
-            case R118:
-                      sz = strlen(ctxbuf);
-                      /*wcslen((wchar_t *)ctxbuf);*/
-                      ((StataVariables *)ctx.vList.at(curr))->varname.assign(&ctxbuf[0],sz);
-                      ctxbuf += 129;
-                      break;
-            // ASCII 
-            case R117:
-                      sz = strlen(ctxbuf);
-                      ((StataVariables *)ctx.vList.at(curr))->varname.assign(&ctxbuf[0],sz);
-                      ctxbuf += 33;
-                      break;
-          }
-          
-          curr++;
+    while (*ctxbuf != '<')
+    {
+
+      switch (ctx.hdr.fileRelease)
+      {
+      // UTF-8
+      case R119:
+      case R118:
+        sz = strlen(ctxbuf);
+        /*wcslen((wchar_t *)ctxbuf);*/
+        (ctx.vList.at(curr))->varname.assign(&ctxbuf[0], sz);
+        ctxbuf += 129;
+        break;
+      // ASCII
+      case R117:
+        sz = strlen(ctxbuf);
+        (ctx.vList.at(curr))->varname.assign(&ctxbuf[0], sz);
+        ctxbuf += 33;
+        break;
       }
-  } else {
-      // not implemented yet
+
+      curr++;
+    }
+  }
+  else
+  {
+    // not implemented yet
   }
 
   ctx.advance();
-
 }
 
-
-
-State * OpenSortList::advanceState()
+State *OpenSortList::advanceState()
 {
   return new OpenFormats();
 }
 
-bool OpenSortList::process(Context & ctx)
+bool OpenSortList::process(Context &ctx)
 {
-  char * ctxbuf = (char *) ctx.advance();      
+  char *ctxbuf = (char *)ctx.advance();
   ctx.advance(); // </sortlist>
-
 }
 
-State * OpenFormats::advanceState()
+State *OpenFormats::advanceState()
 {
   return new OpenValueLabelNames();
 }
 
-bool OpenFormats::process(Context & ctx)
+bool OpenFormats::process(Context &ctx)
 {
-  char * ctxbuf = (char *) ctx.advance();    
+  char *ctxbuf = (char *)ctx.advance();
   int curr = 0, sz = 0;
 
-  if (ctx.hdr.fileByteorder == LSF) {
+  if (ctx.hdr.fileByteorder == LSF)
+  {
 
-      while (*ctxbuf != '<') {  
-          
-          switch(ctx.hdr.fileRelease)
-          { 
-            // UTF-8
-            case R119:
-            case R118:
-                //sz = wcslen((wchar_t *)ctxbuf);
-                sz = strlen((char *)ctxbuf);                
-                ((StataVariables *)ctx.vList.at(curr))->format.assign(&ctxbuf[0],sz);              
-                cout << ((StataVariables *)ctx.vList.at(curr))->format << endl;                                
-                ctxbuf += 57;
-                break;
+    while (*ctxbuf != '<')
+    {
 
-            // ASCII
-            case R117:
-                sz = strlen((char *)ctxbuf);
-                ((StataVariables *)ctx.vList.at(curr))->format.assign(&ctxbuf[0],sz);  
-                cout << ((StataVariables *)ctx.vList.at(curr))->format << endl;                
-                ctxbuf += 49;
-                break;
-          }
+      switch (ctx.hdr.fileRelease)
+      {
+      // UTF-8
+      case R119:
+      case R118:
+        //sz = wcslen((wchar_t *)ctxbuf);
+        sz = strlen((char *)ctxbuf);
+        (ctx.vList.at(curr))->format.assign(&ctxbuf[0], sz);
+        cout << (ctx.vList.at(curr))->format << endl;
+        ctxbuf += 57;
+        break;
 
-          curr++;
+      // ASCII
+      case R117:
+        sz = strlen((char *)ctxbuf);
+        (ctx.vList.at(curr))->format.assign(&ctxbuf[0], sz);
+        cout << (ctx.vList.at(curr))->format << endl;
+        ctxbuf += 49;
+        break;
       }
 
-  } 
-  else 
+      curr++;
+    }
+  }
+  else
   {
-      // not implemented yet
+    // not implemented yet
   }
 
   ctx.advance();
-
 }
 
-State * OpenValueLabelNames::advanceState()
+State *OpenValueLabelNames::advanceState()
 {
   return new OpenVariableLabels();
 }
 
-bool OpenValueLabelNames::process(Context & ctx)
+bool OpenValueLabelNames::process(Context &ctx)
 {
-  char * ctxbuf = (char *) ctx.advance();      
+  char *ctxbuf = (char *)ctx.advance();
   int curr = 0, sz = 0;
 
-  if (ctx.hdr.fileByteorder == LSF) {
+  if (ctx.hdr.fileByteorder == LSF)
+  {
 
-      while (*ctxbuf != '<') {
-        
-          switch(ctx.hdr.fileRelease)
-          { 
-            // UTF-8
-            case R119:
-            case R118:
-                //sz = wcslen((wchar_t *)ctxbuf);
-                sz = strlen((char *)ctxbuf);
-                ((StataVariables *)ctx.vList.at(curr))->vallbl.assign(&ctxbuf[0],sz);              
-                ctxbuf += 129;
-                break;
+    while (*ctxbuf != '<')
+    {
 
-            // ASCII
-            case R117:
-                sz = strlen((char *)ctxbuf);
-                ((StataVariables *)ctx.vList.at(curr))->vallbl.assign(&ctxbuf[0],sz);  
-                ctxbuf += 33;
-                break;
-          }          
-                 
-          curr++;
+      switch (ctx.hdr.fileRelease)
+      {
+      // UTF-8
+      case R119:
+      case R118:
+        //sz = wcslen((wchar_t *)ctxbuf);
+        sz = strlen((char *)ctxbuf);
+        (ctx.vList.at(curr))->vallbl.assign(&ctxbuf[0], sz);
+        ctxbuf += 129;
+        break;
+
+      // ASCII
+      case R117:
+        sz = strlen((char *)ctxbuf);
+        (ctx.vList.at(curr))->vallbl.assign(&ctxbuf[0], sz);
+        ctxbuf += 33;
+        break;
       }
-  } else {
-      // not implemented yet
+
+      curr++;
+    }
+  }
+  else
+  {
+    // not implemented yet
   }
 
   ctx.advance();
 }
 
-State * OpenVariableLabels::advanceState()
+State *OpenVariableLabels::advanceState()
 {
   return new OpenCharacteristics();
 }
 
-bool OpenVariableLabels::process(Context & ctx)
+bool OpenVariableLabels::process(Context &ctx)
 {
-  char * ctxbuf = (char *) ctx.advance();      
+  char *ctxbuf = (char *)ctx.advance();
   int curr = 0, sz = 0;
 
-  if (ctx.hdr.fileByteorder == LSF) {
-    
-    while (*ctxbuf && *ctxbuf != '<') {
+  if (ctx.hdr.fileByteorder == LSF)
+  {
 
-      switch(ctx.hdr.fileRelease)
+    while (*ctxbuf && *ctxbuf != '<')
+    {
+
+      switch (ctx.hdr.fileRelease)
       {
-          case R119:
-          case R118:
+      case R119:
+      case R118:
 
-            if (ctxbuf[0] != 0) {
-              //sz = wcslen((wchar_t *)ctxbuf);
-              sz = strlen((char *)ctxbuf);
-              ((StataVariables *)ctx.vList.at(curr))->varlbl.assign(&ctxbuf[0],sz);  
-              cout << ctx.vList.at(curr)->varname << " " << ctx.vList.at(curr)->varlbl << ctx.vList.at(curr)->format << endl;
-            }
-  
-            ctxbuf += 321;
-            break;
+        if (ctxbuf[0] != 0)
+        {
+          //sz = wcslen((wchar_t *)ctxbuf);
+          sz = strlen((char *)ctxbuf);
+          (ctx.vList.at(curr))->varlbl.assign(&ctxbuf[0], sz);
+          cout << ctx.vList.at(curr)->varname << " " << ctx.vList.at(curr)->varlbl << ctx.vList.at(curr)->format << endl;
+        }
 
-          case R117:
-          
-            if (ctxbuf[0] != 0) {
-              sz = strlen((char *)ctxbuf);
-              ((StataVariables *)ctx.vList.at(curr))->varlbl.assign(&ctxbuf[0],sz);  
-              cout << ctx.vList.at(curr)->varname << " " << ctx.vList.at(curr)->varlbl << " " << ctx.vList.at(curr)->format << endl;
-            }
+        ctxbuf += 321;
+        break;
 
-            ctxbuf += 81;
-            break;
+      case R117:
 
-          default:
-            break;
+        if (ctxbuf[0] != 0)
+        {
+          sz = strlen((char *)ctxbuf);
+          (ctx.vList.at(curr))->varlbl.assign(&ctxbuf[0], sz);
+          cout << ctx.vList.at(curr)->varname << " " << ctx.vList.at(curr)->varlbl << " " << ctx.vList.at(curr)->format << endl;
+        }
+
+        ctxbuf += 81;
+        break;
+
+      default:
+        break;
       }
 
       curr++;
-    }                                                  
-  } 
-  else 
+    }
+  }
+  else
   {
-          // not implemented yet
+    // not implemented yet
   }
 
   ctx.advance();
 }
 
-
-State * OpenCharacteristics::advanceState()
-{
-  if (getHasCharacteristics())
-    return new OpenCH();
-  else
-    return new OpenData(); 
-}
-
-bool OpenCharacteristics::process(Context & ctx)
-{
-    char * ctxbuf = (char *) ctx.getCursor();      
-  
-    if (ctxbuf[0] == '<' && ctxbuf[1] == '/')  
-    {
-       setHasCharacteristics(false);
-       ctx.advance();
-       ctx.advance();
-    }
-    else
-    {
-       setHasCharacteristics(true);
-       ctx.advanceNoState();
-    }    
-}
-
-State * OpenCH::advanceState()
-{
-   return new CloseCH();
-}
-
-bool OpenCH::process(Context & ctx)
-{
-    char * ctxbuf = ctx.getCursor();
-    int count = 0;
-
-    if (ctx.hdr.fileByteorder == LSF) {
-      
-      while (ctxbuf) { 
-    
-          if (ctxbuf[0] == '<' && 
-              ctxbuf[1] == '/' && 
-              ctxbuf[2] == 'c' && 
-              ctxbuf[3] == 'h' && 
-              ctxbuf[4] == '>' && 
-              ctxbuf[5] == '<')
-          {
-            ctx.advanceCursor(count);
-            ctxbuf = ctx.getCursor();
-            return true; 
-          }
-          
-          ctxbuf++;
-          count++;
-          
-      }
-    }
-    else
-    {
-
-    }
-
-    
-}
-
-State * CloseCH::advanceState()
+State *OpenCharacteristics::advanceState()
 {
   if (getHasCharacteristics())
     return new OpenCH();
@@ -658,9 +605,71 @@ State * CloseCH::advanceState()
     return new OpenData();
 }
 
-bool CloseCH::process(Context & ctx)
+bool OpenCharacteristics::process(Context &ctx)
 {
-  char * ctxbuf = (char *) ctx.advance(); 
+  char *ctxbuf = (char *)ctx.getCursor();
+
+  if (ctxbuf[0] == '<' && ctxbuf[1] == '/')
+  {
+    setHasCharacteristics(false);
+    ctx.advance();
+    ctx.advance();
+  }
+  else
+  {
+    setHasCharacteristics(true);
+    ctx.advanceNoState();
+  }
+}
+
+State *OpenCH::advanceState()
+{
+  return new CloseCH();
+}
+
+bool OpenCH::process(Context &ctx)
+{
+  char *ctxbuf = ctx.getCursor();
+  int count = 0;
+
+  if (ctx.hdr.fileByteorder == LSF)
+  {
+
+    while (ctxbuf)
+    {
+
+      if (ctxbuf[0] == '<' &&
+          ctxbuf[1] == '/' &&
+          ctxbuf[2] == 'c' &&
+          ctxbuf[3] == 'h' &&
+          ctxbuf[4] == '>' &&
+          ctxbuf[5] == '<')
+      {
+        ctx.advanceCursor(count);
+        ctxbuf = ctx.getCursor();
+        return true;
+      }
+
+      ctxbuf++;
+      count++;
+    }
+  }
+  else
+  {
+  }
+}
+
+State *CloseCH::advanceState()
+{
+  if (getHasCharacteristics())
+    return new OpenCH();
+  else
+    return new OpenData();
+}
+
+bool CloseCH::process(Context &ctx)
+{
+  char *ctxbuf = (char *)ctx.advance();
 
   if (ctxbuf[0] == '<' && ctxbuf[1] == 'c' && ctxbuf[2] == 'h' && ctxbuf[3] == '>')
     setHasCharacteristics(true);
@@ -671,77 +680,78 @@ bool CloseCH::process(Context & ctx)
   }
 }
 
-State * OpenData::advanceState()
+State *OpenData::advanceState()
 {
   return new OpenSTRL();
 }
 
-bool OpenData::process(Context & ctx)
+bool OpenData::process(Context &ctx)
 {
-  char * ctxbuf = (char *) ctx.advance();      
+  char *ctxbuf = (char *)ctx.advance();
   int curr = 0, sz = 0;
-  
-  if (ctx.hdr.fileByteorder == LSF) {
-      
-        for (vector<StataVariables *>::iterator it = ctx.vList.begin();  *ctxbuf != '<' && it != ctx.vList.end(); ++it)
-        {
-          switch((*it)->type)
-          {
-              case ST_STRL:
-                      cout << "STRL" << endl;
-                      ctx.strls = true;
-                      // handle STRLs
 
-                      break;
-              case ST_DOUBLE:
-                      cout << "DOUBLE" << endl;
-                      ctxbuf += 8;
-                      break;
-              case ST_FLOAT:
-                      cout << "FLOAT" << endl;
-                      ctxbuf += 4;
-                      break;
-              case ST_LONG:
-                      cout << "LONG" << endl;
-                      ctxbuf += 4;
-                      break;
-              case ST_INT:
-                      cout << "INTEGER" << endl;
-                      ctxbuf += 2;
-                      break;
-              case ST_BYTE:              
-                      cout << "BYTE" << endl;
-                      ctxbuf++;
-                      break;
-              default:
-                      if ((*it)->type > 0 && (*it)->type <= 2045) {
-                          cout << "STRING OF LENGTH " << (*it)->type << endl;
-                          ctxbuf += (*it)->type;
-                      }
-                      else
-                          cout << "UNKNOWN TYPE" << endl;
-                      break;
-              }
-              
-      }
-        
-    }
-    else
+  if (ctx.hdr.fileByteorder == LSF)
+  {
+    vector< boost::shared_ptr<StataVariables> >::iterator it;
+
+    for (it = ctx.vList.begin(); *ctxbuf != '<' && it != ctx.vList.end(); ++it)
     {
-       // not implemented yet
+      switch ((*it)->type)
+      {
+      case ST_STRL:
+        cout << "STRL" << endl;
+        ctx.strls = true;
+        // handle STRLs
+
+        break;
+      case ST_DOUBLE:
+        cout << "DOUBLE" << endl;
+        ctxbuf += 8;
+        break;
+      case ST_FLOAT:
+        cout << "FLOAT" << endl;
+        ctxbuf += 4;
+        break;
+      case ST_LONG:
+        cout << "LONG" << endl;
+        ctxbuf += 4;
+        break;
+      case ST_INT:
+        cout << "INTEGER" << endl;
+        ctxbuf += 2;
+        break;
+      case ST_BYTE:
+        cout << "BYTE" << endl;
+        ctxbuf++;
+        break;
+      default:
+        if ((*it)->type > 0 && (*it)->type <= 2045)
+        {
+          cout << "STRING OF LENGTH " << (*it)->type << endl;
+          ctxbuf += (*it)->type;
+        }
+        else
+          cout << "UNKNOWN TYPE" << endl;
+        break;
+      }
     }
+  }
+  else
+  {
+    // not implemented yet
+  }
 
   ctx.advance();
 }
 
-State * OpenSTRL::advanceState()
+State *OpenSTRL::advanceState()
 {
   return new OpenValueLabel();
 }
 
-bool OpenSTRL::process(Context & ctx)
+bool OpenSTRL::process(Context &ctx)
 {
-  char * ctxbuf = (char *) ctx.advance();      
+  char *ctxbuf = (char *)ctx.advance();
 
   if (!ctx.strls)
   {
@@ -749,46 +759,42 @@ bool OpenSTRL::process(Context & ctx)
     return ctx.advance() && true;
   }
   else
-      {
-        // not implemented
-      }
+  {
+    // not implemented
+  }
 
-      return false;
+  return false;
 }
 
-State * OpenValueLabel::advanceState()
+State *OpenValueLabel::advanceState()
 {
   if (getHasLabels())
     return new OpenInnerValueLabel();
   else
     return new CloseValueLabel();
-
- 
 }
 
-bool OpenValueLabel::process(Context & ctx)
+bool OpenValueLabel::process(Context &ctx)
 {
-  char * ctxbuf = (char *) ctx.advance();      
-  
-  if (ctxbuf[0] == '<' && ctxbuf[1] == '/')  
-      setHasLabels(false);
-  else
-      setHasLabels(true);
+  char *ctxbuf = (char *)ctx.advance();
 
+  if (ctxbuf[0] == '<' && ctxbuf[1] == '/')
+    setHasLabels(false);
+  else
+    setHasLabels(true);
 }
 
-State * CloseValueLabel::advanceState()
+State *CloseValueLabel::advanceState()
 {
   return new CloseDTA();
 }
 
-bool CloseValueLabel::process(Context & ctx)
+bool CloseValueLabel::process(Context &ctx)
 {
   ctx.advance();
 }
 
-
-State * OpenInnerValueLabel::advanceState()
+State *OpenInnerValueLabel::advanceState()
 {
   if (getHasMoreLabels())
     return new OpenInnerValueLabel();
@@ -796,104 +802,92 @@ State * OpenInnerValueLabel::advanceState()
     return new CloseValueLabel();
 }
 
-bool OpenInnerValueLabel::process(Context & ctx)
+bool OpenInnerValueLabel::process(Context &ctx)
 {
-    char * ctxbuf = (char *) ctx.advance(); 
-    char * txtorig = NULL;      
-    int curr = 0, sz = 0, totalSize = 0, entries = 0, txtlen = 0, * offsets = NULL;
-    StataValueLabel * svl = new StataValueLabel();
+  char *ctxbuf = (char *)ctx.advance();
+  char *txtorig = NULL;
+  int curr = 0, sz = 0, totalSize = 0, entries = 0, txtlen = 0, *offsets = NULL;
+  StataValueLabel *svl = new StataValueLabel();
 
-    
+  if (ctx.hdr.fileByteorder == LSF)
+  {
 
-     if (ctx.hdr.fileByteorder == LSF) {
+    switch (ctx.hdr.fileRelease)
+    {
 
-          switch(ctx.hdr.fileRelease)
-          {
-             
-            case R119:
-            case R118:
+    case R119:
+    case R118:
 
-            cout << "Length value label table: " << GetLSF<unsigned int>(ctxbuf, 4) << endl; // += 4;
-            totalSize = GetLSF<unsigned int>(ctxbuf, 4);
-            ctxbuf += 4;
-            sz = strlen((char *)ctxbuf);
-            cout << "SZ: " << sz << endl;
-            svl->labname.assign(&ctxbuf[0], sz);
-            cout << svl->labname << endl;
-            ctxbuf += 132;
-            entries = GetLSF<unsigned int>(ctxbuf, 4);
-            cout << "entries: " << entries << endl;
-            ctxbuf += 4;
-            txtlen = GetLSF<unsigned int>(ctxbuf, 4);
-            cout << "txtlen: " << txtlen << endl;
-            ctxbuf += 4;
+      cout << "Length value label table: " << GetLSF<unsigned int>(ctxbuf, 4) << endl; // += 4;
+      totalSize = GetLSF<unsigned int>(ctxbuf, 4);
+      ctxbuf += 4;
+      sz = strlen((char *)ctxbuf);
+      cout << "SZ: " << sz << endl;
+      svl->labname.assign(&ctxbuf[0], sz);
+      cout << svl->labname << endl;
+      ctxbuf += 132;
+      entries = GetLSF<unsigned int>(ctxbuf, 4);
+      cout << "entries: " << entries << endl;
+      ctxbuf += 4;
+      txtlen = GetLSF<unsigned int>(ctxbuf, 4);
+      cout << "txtlen: " << txtlen << endl;
+      ctxbuf += 4;
 
-            offsets = new int[entries]; 
+      offsets = new int[entries];
 
-            for (int i = 0; i < entries; ctxbuf += 4, i++)
-              offsets[i] = GetLSF<int>(ctxbuf, 4);
-      
-            txtorig = ctxbuf + (entries * 4);
-            
-            for(int i = 0; i < entries; i++, ctxbuf += 4)
-            {          
-                svl->valuelabel[GetLSF<unsigned int>(ctxbuf, 4)].assign((char *)(&txtorig[offsets[i]]), strlen(&txtorig[offsets[i]]));
-                cout << "[6] " << svl->valuelabel[GetLSF<unsigned int>(ctxbuf, 4)] << endl;
-            }
+      for (int i = 0; i < entries; ctxbuf += 4, i++)
+        offsets[i] = GetLSF<int>(ctxbuf, 4);
 
-            ctxbuf += txtlen;
-            break;
+      txtorig = ctxbuf + (entries * 4);
 
-            case R117:  
-                    totalSize = GetLSF<unsigned int>(ctxbuf, 4);
-                    ctxbuf += 4;
-                    sz = strlen((char *)ctxbuf);
-                    svl->labname.assign(&ctxbuf[0], sz);
-                    cout << svl->labname << endl;
-                    ctxbuf += 36;
-                    entries = GetLSF<unsigned int>(ctxbuf, 4);
-                    ctxbuf += 4;
-                    txtlen = GetLSF<unsigned int>(ctxbuf, 4);
-                    ctxbuf += 4;
+      for (int i = 0; i < entries; i++, ctxbuf += 4)
+        svl->valuelabel[GetLSF<unsigned int>(ctxbuf, 4)].assign((char *)(&txtorig[offsets[i]]), strlen(&txtorig[offsets[i]]));
 
-                    offsets = new int[entries]; 
+      ctxbuf += txtlen;
+      break;
 
-                    for (int i = 0; i < entries; ctxbuf += 4, i++)
-                    offsets[i] = GetLSF<int>(ctxbuf, 4);
-            
-      
-                  txtorig = ctxbuf + (entries * 4);
-      
-              
-                  
-                  for(int i = 0; i < entries; i++, ctxbuf += 4)
-                  {          
-                      svl->valuelabel[GetLSF<unsigned int>(ctxbuf, 4)].assign((char *)(&txtorig[offsets[i]]), strlen(&txtorig[offsets[i]]));
-                      cout << "[6] " << svl->valuelabel[GetLSF<unsigned int>(ctxbuf, 4)] << endl;
-                  }
-                    ctxbuf += txtlen;
-                break;
+    case R117:
+      totalSize = GetLSF<unsigned int>(ctxbuf, 4);
+      ctxbuf += 4;
+      sz = strlen((char *)ctxbuf);
+      svl->labname.assign(&ctxbuf[0], sz);
+      cout << svl->labname << endl;
+      ctxbuf += 36;
+      entries = GetLSF<unsigned int>(ctxbuf, 4);
+      ctxbuf += 4;
+      txtlen = GetLSF<unsigned int>(ctxbuf, 4);
+      ctxbuf += 4;
 
-           
-        }
-      }
-      else
-      {
+      offsets = new int[entries];
 
-      }
-            
-      if (ctxbuf[0] == '<' && ctxbuf[1] == '/' && ctxbuf[2] == 'l' && ctxbuf[6] == '<' && ctxbuf[8] != 'v' )
-      {
-        setHasMoreLabels(true);
-        cout << "HAS MORE LABELS" << endl;
-        ctx.advance();   
-        ctx.advance();  
-      }
-      else
-      {
-        cout << "NO MORE LABELS" << endl;
-        setHasMoreLabels(false);
-      }
+      for (int i = 0; i < entries; ctxbuf += 4, i++)
+        offsets[i] = GetLSF<int>(ctxbuf, 4);
 
-       return true;
+      txtorig = ctxbuf + (entries * 4);
+
+      for (int i = 0; i < entries; i++, ctxbuf += 4)
+        svl->valuelabel[GetLSF<unsigned int>(ctxbuf, 4)].assign((char *)(&txtorig[offsets[i]]), strlen(&txtorig[offsets[i]]));
+
+      ctxbuf += txtlen;
+      break;
+    }
+  }
+  else
+  {
+  }
+
+  if (ctxbuf[0] == '<' && ctxbuf[1] == '/' && ctxbuf[2] == 'l' && ctxbuf[6] == '<' && ctxbuf[8] != 'v')
+  {
+    setHasMoreLabels(true);
+    cout << "HAS MORE LABELS" << endl;
+    ctx.advance();
+    ctx.advance();
+  }
+  else
+  {
+    cout << "NO MORE LABELS" << endl;
+    setHasMoreLabels(false);
+  }
+
+  return true;
 }

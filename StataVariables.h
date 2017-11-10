@@ -10,21 +10,30 @@
 
 #include <string>
 
-
-class StataVariables {
+class StataVariables{
 public:
-    StataVariables();
-    StataVariables(const StataVariables& orig);
-    virtual ~StataVariables();
     std::string varname;
     int type;
     std::string format;
     std::string vallbl;
     std::string varlbl;
-    
-private:
-
 };
+
+
+template <class T> 
+class StataVariablesImpl : public StataVariables {
+public:
+    StataVariablesImpl() {};
+    StataVariablesImpl(const StataVariablesImpl& orig) {};
+    virtual ~StataVariablesImpl() {};
+    T getValue() { return value; };
+    void setValue(T t) { value = t; }
+private:
+    T value;
+};
+
+
+
 
 #endif	/* STATAVARIABLES_H */
 

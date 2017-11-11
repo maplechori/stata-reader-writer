@@ -1,6 +1,7 @@
 #include "StataHeader.h"
 #include <bitset>
 #include <iostream>
+#include <string>
 
 template <typename T> 
 T GetLSF(char * ctxbuf, int size)
@@ -13,3 +14,6 @@ T GetLSF(char * ctxbuf, int size)
     
     return currValue;
 }
+
+template <> 
+string GetLSF<string>(char * ctxbuf, int size);

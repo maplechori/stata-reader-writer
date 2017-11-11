@@ -744,6 +744,7 @@ bool OpenData::process(Context &ctx)
 {
   char *ctxbuf = (char *)ctx.advance();
   int curr = 0, sz = 0;
+  double _dbl=0;
 
   if (ctx.hdr.fileByteorder == LSF)
   {
@@ -760,32 +761,38 @@ bool OpenData::process(Context &ctx)
 
         break;
       case ST_DOUBLE:
-        cout << "DOUBLE" << endl;
-        //StataVariablesImpl<double> o;
+         //_dbl = GetLSF<double>(ctxbuf, 8);
+      
+        //cout << "DOUBLE " << _dbl  << endl;
+        //it->setValue();
 
         ctxbuf += 8;
         break;
       case ST_FLOAT:
-        cout << "FLOAT" << endl;
+        //cout << "FLOAT " << GetLSF<float>(ctxbuf, 4) << endl;
         ctxbuf += 4;
         break;
       case ST_LONG:
-        cout << "LONG" << endl;
+        cout << "LONG " << GetLSF<long>(ctxbuf, 4) << endl;
         ctxbuf += 4;
         break;
       case ST_INT:
-        cout << "INTEGER" << endl;
+        cout << "INTEGER " << GetLSF<int>(ctxbuf, 4) << endl;
         ctxbuf += 2;
         break;
       case ST_BYTE:
-        cout << "BYTE" << endl;
+        cout << "BYTE " << GetLSF<char>(ctxbuf, 1) << endl;
+        static_cast<StataVariablesImpl<char>* >((&*it)->get())->setValue(GetLSF<char>(ctxbuf, 1));
 
+        //static_cast<boost::shared_ptr<StataVariablesImpl<char> *>(&*it)->setValue(GetLSF<char>(ctxbuf, 1));
         ctxbuf++;
         break;
       default:
         if ((*it)->type > 0 && (*it)->type <= 2045)
         {
-          cout << "STRING OF LENGTH " << (*it)->type << endl;
+          static_cast<StataVariablesImpl<string>* >((&*it)->get())->setValue(GetLSF<string>(ctxbuf, (*it)->type));
+          cout << "STRING OF LENGTH[" << (*it)->type <<"] " << (static_cast<StataVariablesImpl<string>* >((&*it)->get())->getValue()) << endl;
+          //cout << "STRING OF LENGTH " << (*it)->type <<  (*it)->setValue("hi") << endl;
           ctxbuf += (*it)->type;
         }
         else

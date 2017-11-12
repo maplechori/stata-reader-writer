@@ -67,6 +67,7 @@ class OpenDTA : public State
   bool check(char *buffer) { return CHECK_TAG(XML_OPEN_FILE); }
   State *advanceState();
   bool process(Context &ctx);
+  ~OpenDTA() {};
 };
 
 class CloseDTA : public State
@@ -74,6 +75,7 @@ class CloseDTA : public State
   bool check(char *buffer) { return CHECK_TAG(XML_CLOSE_FILE); }
   State *advanceState();
   bool process(Context &ctx);
+  ~CloseDTA() {};
 };
 
 class OpenHeader : public State
@@ -81,6 +83,7 @@ class OpenHeader : public State
   bool check(char *buffer) { return CHECK_TAG(XML_OPEN_HEADER); }
   State *advanceState();
   bool process(Context &ctx);
+  ~OpenHeader() {};
 };
 
 class CloseHeader : public State
@@ -88,6 +91,7 @@ class CloseHeader : public State
   bool check(char *buffer) { return CHECK_TAG(XML_CLOSE_HEADER); }
   State *advanceState();
   bool process(Context &ctx);
+  ~CloseHeader() {};
 };
 
 class OpenRelease : public State
@@ -95,6 +99,7 @@ class OpenRelease : public State
   bool check(char *buffer) { return CHECK_TAG(XML_OPEN_RELEASE); }
   State *advanceState();
   bool process(Context &ctx);
+  ~OpenRelease() {};
 };
 
 class CloseRelease : public State
@@ -102,6 +107,7 @@ class CloseRelease : public State
   bool check(char *buffer) { return CHECK_TAG(XML_CLOSE_RELEASE); }
   State *advanceState();
   bool process(Context &ctx);
+  ~CloseRelease() {};
 };
 
 class OpenByteOrder : public State
@@ -109,6 +115,7 @@ class OpenByteOrder : public State
   bool check(char *buffer) { return CHECK_TAG(XML_OPEN_BYTEORDER); }
   State *advanceState();
   bool process(Context &ctx);
+  ~OpenByteOrder() {};
 };
 
 class OpenK : public State
@@ -116,6 +123,7 @@ class OpenK : public State
   bool check(char *buffer) { return CHECK_TAG(XML_OPEN_VARIABLES_COUNT); }
   State *advanceState();
   bool process(Context &ctx);
+  ~OpenK() {};
 };
 
 class OpenN : public State
@@ -123,6 +131,7 @@ class OpenN : public State
   bool check(char *buffer) { return CHECK_TAG(XML_OPEN_OBSERVATIONS_COUNT); }
   State *advanceState();
   bool process(Context &ctx);
+  ~OpenN() {};
 };
 
 class OpenLabel : public State
@@ -130,6 +139,7 @@ class OpenLabel : public State
   bool check(char *buffer) { return CHECK_TAG(XML_OPEN_LABEL); }
   State *advanceState();
   bool process(Context &ctx);
+  ~OpenLabel() {};
 };
 
 class OpenCH : public State
@@ -137,6 +147,7 @@ class OpenCH : public State
   bool check(char *buffer) { return CHECK_TAG(XML_OPEN_CH); }
   State *advanceState();
   bool process(Context &ctx);
+  ~OpenCH() {};
 };
 
 class CloseCH : public State
@@ -146,7 +157,7 @@ class CloseCH : public State
   bool process(Context &ctx);
   void setHasCharacteristics(bool v) { hasCharacteristics = v; };
   bool getHasCharacteristics() { return hasCharacteristics; };
-
+  ~CloseCH() {};
 private:
   bool hasCharacteristics;
 };
@@ -156,6 +167,7 @@ class OpenTimeStamp : public State
   bool check(char *buffer) { return CHECK_TAG(XML_OPEN_TIMESTAMP); }
   State *advanceState();
   bool process(Context &ctx);
+  ~OpenTimeStamp() {};
 };
 
 class OpenMap : public State
@@ -163,6 +175,7 @@ class OpenMap : public State
   bool check(char *buffer) { return CHECK_TAG(XML_OPEN_MAP); }
   State *advanceState();
   bool process(Context &ctx);
+  ~OpenMap() {};
 };
 
 class OpenVarTypes : public State
@@ -170,6 +183,7 @@ class OpenVarTypes : public State
   bool check(char *buffer) { return CHECK_TAG(XML_OPEN_VARIABLE_TYPES); }
   State *advanceState();
   bool process(Context &ctx);
+  ~OpenVarTypes() {};
 };
 
 class OpenVarNames : public State
@@ -177,6 +191,7 @@ class OpenVarNames : public State
   bool check(char *buffer) { return CHECK_TAG(XML_OPEN_VARNAMES); }
   State *advanceState();
   bool process(Context &ctx);
+  ~OpenVarNames() {};
 };
 
 class OpenSortList : public State
@@ -184,6 +199,7 @@ class OpenSortList : public State
   bool check(char *buffer) { return CHECK_TAG(XML_OPEN_SORTLIST); }
   State *advanceState();
   bool process(Context &ctx);
+  ~OpenSortList() {};
 };
 
 class OpenFormats : public State
@@ -191,6 +207,7 @@ class OpenFormats : public State
   bool check(char *buffer) { return CHECK_TAG(XML_OPEN_FORMATS); }
   State *advanceState();
   bool process(Context &ctx);
+  ~OpenFormats() {};
 };
 
 class OpenValueLabelNames : public State
@@ -198,6 +215,7 @@ class OpenValueLabelNames : public State
   bool check(char *buffer) { return CHECK_TAG(XML_OPEN_VALUE_LABEL_NAMES); }
   State *advanceState();
   bool process(Context &ctx);
+  ~OpenValueLabelNames() {};
 };
 
 class OpenVariableLabels : public State
@@ -205,6 +223,7 @@ class OpenVariableLabels : public State
   bool check(char *buffer) { return CHECK_TAG(XML_OPEN_VARIABLE_LABELS); }
   State *advanceState();
   bool process(Context &ctx);
+  ~OpenVariableLabels() {};
 };
 
 class OpenCharacteristics : public State
@@ -214,7 +233,7 @@ class OpenCharacteristics : public State
   bool process(Context &ctx);
   void setHasCharacteristics(bool v) { hasCharacteristics = v; };
   bool getHasCharacteristics() { return hasCharacteristics; };
-
+  ~OpenCharacteristics() {};
 private:
   bool hasCharacteristics;
 };
@@ -224,6 +243,7 @@ class OpenData : public State
   bool check(char *buffer) { return CHECK_TAG(XML_OPEN_DATA); }
   State *advanceState();
   bool process(Context &ctx);
+  ~OpenData() {};
 };
 
 class OpenSTRL : public State
@@ -231,6 +251,7 @@ class OpenSTRL : public State
   bool check(char *buffer) { return CHECK_TAG(XML_OPEN_STRLS); }
   State *advanceState();
   bool process(Context &ctx);
+  ~OpenSTRL() {};
 };
 
 class OpenValueLabel : public State
@@ -240,7 +261,7 @@ class OpenValueLabel : public State
   bool process(Context &ctx);
   void setHasLabels(bool v) { hasLabels = v; };
   bool getHasLabels() { return hasLabels; };
-
+  ~OpenValueLabel() {};
 private:
   bool hasLabels;
 };
@@ -250,6 +271,7 @@ class CloseValueLabel : public State
   bool check(char *buffer) { return CHECK_TAG(XML_CLOSE_VALUE_LABELS); }
   State *advanceState();
   bool process(Context &ctx);
+  ~CloseValueLabel() {};
 };
 
 class OpenInnerValueLabel : public State
@@ -259,7 +281,7 @@ class OpenInnerValueLabel : public State
   bool process(Context &ctx);
   void setHasMoreLabels(bool v) { hasMoreLabels = v; };
   bool getHasMoreLabels() { return hasMoreLabels; };
-
+  ~OpenInnerValueLabel() {};
 private:
   bool hasMoreLabels;
 };

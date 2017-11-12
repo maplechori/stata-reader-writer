@@ -124,7 +124,7 @@ State *OpenRelease::advanceState()
 bool OpenRelease::process(Context &ctx)
 {
   string version = ctx.getChars(3);
-  cout << version << endl;
+  //cout << version << endl;
   switch (strtol(version.c_str(), NULL, 10))
   {
   case 119:
@@ -241,6 +241,8 @@ bool OpenN::process(Context &ctx)
     // MSF not implemented yet
   }
 
+  cout << "OBSERVATIONS: " << ctx.hdr.observations << endl;
+
   ctx.advance();
   return true;
 }
@@ -303,6 +305,11 @@ bool OpenTimeStamp::process(Context &ctx)
   case R117:
     label_count = GetLSF<int>(ctxbuf, 1);
     ctx.hdr.ts.assign(&ctxbuf[1], label_count);
+    break;
+  case R115:
+  case R114:
+  case R113:
+  case R112:
     break;
   }
 
@@ -411,21 +418,21 @@ bool OpenVarTypes::process(Context &ctx)
         ctx.vList.push_back(boost::shared_ptr<StataVariables>(sta_integer));
         break;
       case ST_BYTE:
-        cout << "BYTE" << endl;      
+        cout << "BYTE" << endl;
         sta_byte = new StataVariablesImpl<char>();
         sta_byte->type = stataType;
         ctx.vList.push_back(boost::shared_ptr<StataVariables>(sta_byte));
         break;
       default:
-          if (stataType > 0 && stataType <= 2045)
-          {
-            cout << "STRING OF LENGTH " << stataType << endl;
-            sta_char = new StataVariablesImpl<string>();
-            sta_char->type = stataType;
-            ctx.vList.push_back(boost::shared_ptr<StataVariables>(sta_char));
-          }
-          else
-            cout << "UNKNOWN TYPE " << hex << stataType << endl;
+        if (stataType > 0 && stataType <= 2045)
+        {
+          cout << "STRING OF LENGTH " << stataType << endl;
+          sta_char = new StataVariablesImpl<string>();
+          sta_char->type = stataType;
+          ctx.vList.push_back(boost::shared_ptr<StataVariables>(sta_char));
+        }
+        else
+          cout << "UNKNOWN TYPE " << hex << stataType << endl;
         break;
       }
 
@@ -475,6 +482,12 @@ bool OpenVarNames::process(Context &ctx)
         (ctx.vList.at(curr))->varname.assign(&ctxbuf[0], sz);
         ctxbuf += 33;
         break;
+
+      case R115:
+      case R114:
+      case R113:
+      case R112:
+        break;
       }
 
       curr++;
@@ -523,7 +536,7 @@ bool OpenFormats::process(Context &ctx)
         //sz = wcslen((wchar_t *)ctxbuf);
         sz = strlen((char *)ctxbuf);
         (ctx.vList.at(curr))->format.assign(&ctxbuf[0], sz);
-        cout << (ctx.vList.at(curr))->format << endl;
+       // cout << (ctx.vList.at(curr))->format << endl;
         ctxbuf += 57;
         break;
 
@@ -531,8 +544,14 @@ bool OpenFormats::process(Context &ctx)
       case R117:
         sz = strlen((char *)ctxbuf);
         (ctx.vList.at(curr))->format.assign(&ctxbuf[0], sz);
-        cout << (ctx.vList.at(curr))->format << endl;
+        //cout << (ctx.vList.at(curr))->format << endl;
         ctxbuf += 49;
+        break;
+
+      case R115:
+      case R114:
+      case R113:
+      case R112:
         break;
       }
 
@@ -580,6 +599,12 @@ bool OpenValueLabelNames::process(Context &ctx)
         (ctx.vList.at(curr))->vallbl.assign(&ctxbuf[0], sz);
         ctxbuf += 33;
         break;
+
+      case R115:
+      case R114:
+      case R113:
+      case R112:
+        break;
       }
 
       curr++;
@@ -619,7 +644,7 @@ bool OpenVariableLabels::process(Context &ctx)
           //sz = wcslen((wchar_t *)ctxbuf);
           sz = strlen((char *)ctxbuf);
           (ctx.vList.at(curr))->varlbl.assign(&ctxbuf[0], sz);
-          cout << ctx.vList.at(curr)->varname << " " << ctx.vList.at(curr)->varlbl << ctx.vList.at(curr)->format << endl;
+          //cout << ctx.vList.at(curr)->varname << " " << ctx.vList.at(curr)->varlbl << ctx.vList.at(curr)->format << endl;
         }
 
         ctxbuf += 321;
@@ -631,7 +656,7 @@ bool OpenVariableLabels::process(Context &ctx)
         {
           sz = strlen((char *)ctxbuf);
           (ctx.vList.at(curr))->varlbl.assign(&ctxbuf[0], sz);
-          cout << ctx.vList.at(curr)->varname << " " << ctx.vList.at(curr)->varlbl << " " << ctx.vList.at(curr)->format << endl;
+          //cout << ctx.vList.at(curr)->varname << " " << ctx.vList.at(curr)->varlbl << " " << ctx.vList.at(curr)->format << endl;
         }
 
         ctxbuf += 81;
@@ -742,63 +767,65 @@ State *OpenData::advanceState()
 
 bool OpenData::process(Context &ctx)
 {
-  char *ctxbuf = (char *)ctx.advance();
+  char *ctxbuf = (char *)ctx.advance(), * start = NULL;
   int curr = 0, sz = 0;
-  double _dbl=0;
+  double _dbl = 0;
 
   if (ctx.hdr.fileByteorder == LSF)
   {
     vector<boost::shared_ptr<StataVariables> >::iterator it;
-
-    for (it = ctx.vList.begin(); *ctxbuf != '<' && it != ctx.vList.end(); ++it)
+    for (int j = 0; j < ctx.hdr.observations; j++)
     {
-      switch ((*it)->type)
+      cout << "**************** OBSERVATION NUMBER ******************** " << j << endl;
+      start = ctxbuf;
+      for (it = ctx.vList.begin();  it != ctx.vList.end() && *ctxbuf != '<' && *(ctxbuf + 1) != '/'; ++it)
       {
-      case ST_STRL:
-        cout << "STRL" << endl;
-        ctx.strls = true;
-        // handle STRLs
-
-        break;
-      case ST_DOUBLE:
-         //_dbl = GetLSF<double>(ctxbuf, 8);
-      
-        //cout << "DOUBLE " << _dbl  << endl;
-        //it->setValue();
-
-        ctxbuf += 8;
-        break;
-      case ST_FLOAT:
-        //cout << "FLOAT " << GetLSF<float>(ctxbuf, 4) << endl;
-        ctxbuf += 4;
-        break;
-      case ST_LONG:
-        cout << "LONG " << GetLSF<long>(ctxbuf, 4) << endl;
-        ctxbuf += 4;
-        break;
-      case ST_INT:
-        cout << "INTEGER " << GetLSF<int>(ctxbuf, 4) << endl;
-        ctxbuf += 2;
-        break;
-      case ST_BYTE:
-        cout << "BYTE " << GetLSF<char>(ctxbuf, 1) << endl;
-        static_cast<StataVariablesImpl<char>* >((&*it)->get())->setValue(GetLSF<char>(ctxbuf, 1));
-
-        //static_cast<boost::shared_ptr<StataVariablesImpl<char> *>(&*it)->setValue(GetLSF<char>(ctxbuf, 1));
-        ctxbuf++;
-        break;
-      default:
-        if ((*it)->type > 0 && (*it)->type <= 2045)
+        switch ((*it)->type)
         {
-          static_cast<StataVariablesImpl<string>* >((&*it)->get())->setValue(GetLSF<string>(ctxbuf, (*it)->type));
-          cout << "STRING OF LENGTH[" << (*it)->type <<"] " << (static_cast<StataVariablesImpl<string>* >((&*it)->get())->getValue()) << endl;
-          //cout << "STRING OF LENGTH " << (*it)->type <<  (*it)->setValue("hi") << endl;
-          ctxbuf += (*it)->type;
+        case ST_STRL:
+          cout << "STRL" << endl;
+          ctx.strls = true;
+          // handle STRLs
+
+          break;
+        case ST_DOUBLE:
+          //_dbl = 
+
+          cout << "DOUBLE [" << (*it)->varname << "]" << GetLSF<double>(ctxbuf, 8)  << endl;
+          //it->setValue();
+
+          ctxbuf += 8;
+          break;
+        case ST_FLOAT:
+          cout << "FLOAT [" << (*it)->varname << "]" << GetLSF<float>(ctxbuf, 4) << endl;
+          ctxbuf += 4;
+          break;
+        case ST_LONG:
+          cout << "LONG [" << (*it)->varname << "]" << GetLSF<long>(ctxbuf, 4) << endl;
+          ctxbuf += 4;
+          break;
+        case ST_INT:
+          cout << "INTEGER[" << (*it)->varname << "]" << GetLSF<int>(ctxbuf, 4) << endl;
+          ctxbuf += 2;
+          break;
+        case ST_BYTE:
+          cout << "BYTE[" << (*it)->varname << "]" << (short)GetLSF<char>(ctxbuf, 1) << " " << (*it)->format << " " << (*it)->varlbl << endl;
+          static_cast<StataVariablesImpl<char> *>((&*it)->get())->setValue(GetLSF<char>(ctxbuf, 1));
+          ctxbuf++;
+          break;
+        default:
+          if ((*it)->type > 0 && (*it)->type <= 2045)
+          {
+            static_cast<StataVariablesImpl<string> *>((&*it)->get())->setValue(GetLSF<string>(ctxbuf, (*it)->type));
+            cout << "STRING OF LENGTH[" << (*it)->type << "][" << (*it)->varname << "] " << (static_cast<StataVariablesImpl<string> *>((&*it)->get())->getValue()) << " " << (*it)->format << " " << (*it)->varlbl << endl;
+            ctxbuf += (*it)->type;
+          }
+          else
+            cout << "UNKNOWN TYPE" << endl;
+          break;
         }
-        else
-          cout << "UNKNOWN TYPE" << endl;
-        break;
       }
+      //ctx.advanceCursor(ctxbuf - start);
     }
   }
   else
@@ -807,6 +834,7 @@ bool OpenData::process(Context &ctx)
   }
 
   ctx.advance();
+  return true;
 }
 
 State *OpenSTRL::advanceState()
@@ -851,6 +879,7 @@ bool OpenValueLabel::process(Context &ctx)
 
 State *CloseValueLabel::advanceState()
 {
+  cout << "DONE" << endl;
   return new CloseDTA();
 }
 
@@ -934,6 +963,12 @@ bool OpenInnerValueLabel::process(Context &ctx)
         svl->valuelabel[GetLSF<unsigned int>(ctxbuf, 4)].assign((char *)(&txtorig[offsets[i]]), strlen(&txtorig[offsets[i]]));
 
       ctxbuf += txtlen;
+      break;
+
+    case R115:
+    case R114:
+    case R113:
+    case R112:
       break;
     }
   }

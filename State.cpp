@@ -638,7 +638,6 @@ bool OpenVariableLabels::process(Context &ctx)
           //sz = wcslen((wchar_t *)ctxbuf);
           sz = strlen((char *)ctxbuf);
           (ctx.vList.at(curr))->varlbl.assign(&ctxbuf[0], sz);
-          //cout << ctx.vList.at(curr)->varname << " " << ctx.vList.at(curr)->varlbl << ctx.vList.at(curr)->format << endl;
         }
 
         ctxbuf += 321;
@@ -650,7 +649,6 @@ bool OpenVariableLabels::process(Context &ctx)
         {
           sz = strlen((char *)ctxbuf);
           (ctx.vList.at(curr))->varlbl.assign(&ctxbuf[0], sz);
-          //cout << ctx.vList.at(curr)->varname << " " << ctx.vList.at(curr)->varlbl << " " << ctx.vList.at(curr)->format << endl;
         }
 
         ctxbuf += 81;

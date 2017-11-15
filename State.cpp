@@ -394,31 +394,26 @@ bool OpenVarTypes::process(Context &ctx)
         // handle STRLs
         break;
       case ST_DOUBLE:
-        cout << "DOUBLE" << endl;
         sta_double = new StataVariablesImpl<double>();
         sta_double->type = stataType;
         ctx.vList.push_back(boost::shared_ptr<StataVariables>(sta_double));
         break;
       case ST_FLOAT:
-        cout << "FLOAT" << endl;
         sta_float = new StataVariablesImpl<float>();
         sta_float->type = stataType;
         ctx.vList.push_back(boost::shared_ptr<StataVariables>(sta_float));
         break;
       case ST_LONG:
-        cout << "LONG" << endl;
         sta_long = new StataVariablesImpl<long>();
         sta_long->type = stataType;
         ctx.vList.push_back(boost::shared_ptr<StataVariables>(sta_long));
         break;
       case ST_INT:
-        cout << "INTEGER" << endl;
         sta_integer = new StataVariablesImpl<int>();
         sta_integer->type = stataType;
         ctx.vList.push_back(boost::shared_ptr<StataVariables>(sta_integer));
         break;
       case ST_BYTE:
-        cout << "BYTE" << endl;
         sta_byte = new StataVariablesImpl<char>();
         sta_byte->type = stataType;
         ctx.vList.push_back(boost::shared_ptr<StataVariables>(sta_byte));
@@ -426,7 +421,6 @@ bool OpenVarTypes::process(Context &ctx)
       default:
         if (stataType > 0 && stataType <= 2045)
         {
-          cout << "STRING OF LENGTH " << stataType << endl;
           sta_char = new StataVariablesImpl<string>();
           sta_char->type = stataType;
           ctx.vList.push_back(boost::shared_ptr<StataVariables>(sta_char));
@@ -536,7 +530,7 @@ bool OpenFormats::process(Context &ctx)
         //sz = wcslen((wchar_t *)ctxbuf);
         sz = strlen((char *)ctxbuf);
         (ctx.vList.at(curr))->format.assign(&ctxbuf[0], sz);
-       // cout << (ctx.vList.at(curr))->format << endl;
+        // cout << (ctx.vList.at(curr))->format << endl;
         ctxbuf += 57;
         break;
 
@@ -767,7 +761,7 @@ State *OpenData::advanceState()
 
 bool OpenData::process(Context &ctx)
 {
-  char *ctxbuf = (char *)ctx.advance(), * start = NULL;
+  char *ctxbuf = (char *)ctx.advance(), *start = NULL;
   int curr = 0, sz = 0;
   double _dbl = 0;
 
@@ -776,10 +770,11 @@ bool OpenData::process(Context &ctx)
     vector<boost::shared_ptr<StataVariables> >::iterator it;
     for (int j = 0; j < ctx.hdr.observations; j++)
     {
-      cout << "**************** OBSERVATION NUMBER ******************** " << j << endl;
       start = ctxbuf;
-      for (it = ctx.vList.begin();  it != ctx.vList.end() && *ctxbuf != '<' && *(ctxbuf + 1) != '/'; ++it)
+
+      for (it = ctx.vList.begin(); it != ctx.vList.end() && *ctxbuf != '<' && *(ctxbuf + 1) != '/'; ++it)
       {
+
         switch ((*it)->type)
         {
         case ST_STRL:
@@ -789,27 +784,23 @@ bool OpenData::process(Context &ctx)
 
           break;
         case ST_DOUBLE:
-          //_dbl = 
-
-          cout << "DOUBLE [" << (*it)->varname << "]" << GetLSF<double>(ctxbuf, 8)  << endl;
-          //it->setValue();
-
+          cout << "DOUBLE[" << (*it)->varname << "]" << GetLSF<double>(ctxbuf, 8) << endl;
           ctxbuf += 8;
           break;
         case ST_FLOAT:
-          cout << "FLOAT [" << (*it)->varname << "]" << GetLSF<float>(ctxbuf, 4) << endl;
+          cout << "FLOAT[" << (*it)->varname << "]" << GetLSF<float>(ctxbuf, 4) << endl;
           ctxbuf += 4;
           break;
         case ST_LONG:
-          cout << "LONG [" << (*it)->varname << "]" << GetLSF<long>(ctxbuf, 4) << endl;
+          cout << "LONG[" << (*it)->varname << "]" << GetLSF<int32_t>(ctxbuf, 4) << endl;
           ctxbuf += 4;
           break;
         case ST_INT:
-          cout << "INTEGER[" << (*it)->varname << "]" << GetLSF<int>(ctxbuf, 4) << endl;
+          cout << "INTEGER[" << (*it)->varname << "]" << GetLSF<int16_t>(ctxbuf, 4) << endl;
           ctxbuf += 2;
           break;
         case ST_BYTE:
-          cout << "BYTE[" << (*it)->varname << "]" << (short)GetLSF<char>(ctxbuf, 1) << " " << (*it)->format << " " << (*it)->varlbl << endl;
+          cout << "BYTE[" << (*it)->varname << "]" << (short)GetLSF<int8_t>(ctxbuf, 1) << " " << (*it)->format << " " << (*it)->varlbl << endl;
           static_cast<StataVariablesImpl<char> *>((&*it)->get())->setValue(GetLSF<char>(ctxbuf, 1));
           ctxbuf++;
           break;

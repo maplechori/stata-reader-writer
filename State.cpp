@@ -51,19 +51,7 @@ void Context::advanceNoState()
 void *Context::advance()
 {
 
-  if ((cursor - origin) >= length)
-    return NULL;
-
-  for (start = cursor; cursor && *cursor != '>'; cursor++)
-    ;
-
-  if (cursor && *cursor == '>')
-  {
-    cursor++;
-    memset(buffer, 0, sizeof(buffer));
-    strncpy(buffer, start, cursor - start); /* buffer overflow */
-    buffer[cursor - start] = '\0';
-  }
+  advanceNoState();
 
   while (currentState && currentState->check(buffer))
   {
@@ -72,7 +60,7 @@ void *Context::advance()
     if (currentState)
     {
       State *newState = currentState->advanceState();
-      delete currentState;
+      delete currentState; 
       currentState = newState;
     }
   }

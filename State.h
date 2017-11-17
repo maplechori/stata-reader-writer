@@ -24,6 +24,7 @@ public:
   virtual State *advanceState() = 0;
   virtual bool check(char *) = 0;
   virtual bool process(Context &ctx) = 0;
+  virtual ~State() {};
 };
 
 class Context

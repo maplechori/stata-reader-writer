@@ -19,16 +19,7 @@ void Context::advanceCursor(int c)
 
   cursor += c;
 
-  for (start = cursor; cursor && *cursor != '>'; cursor++)
-    ;
-
-  if (cursor && *cursor == '>')
-  {
-    cursor++;
-    memset(buffer, 0, sizeof(buffer));
-    strncpy(buffer, start, cursor - start); /* buffer overflow */
-    buffer[cursor - start] = '\0';
-  }
+  advanceNoState();
 }
 
 void Context::advanceNoState()
@@ -60,7 +51,7 @@ void *Context::advance()
     if (currentState)
     {
       State *newState = currentState->advanceState();
-      delete currentState; 
+      delete currentState;
       currentState = newState;
     }
   }
@@ -770,19 +761,23 @@ bool OpenData::process(Context &ctx)
 
           break;
         case ST_DOUBLE:
-          cout << "DOUBLE[" << (*it)->varname << "]" << GetLSF<double>(ctxbuf, 8) << endl;
+          cout << "DOUBLE[" << (*it)->varname << "]" << GetLSF<double>(ctxbuf, 8) << " " << (*it)->format << " " << (*it)->varlbl << endl;
+          static_cast<StataVariablesImpl<double> *>((&*it)->get())->setValue(GetLSF<double>(ctxbuf, 8));   
           ctxbuf += 8;
           break;
         case ST_FLOAT:
-          cout << "FLOAT[" << (*it)->varname << "]" << GetLSF<float>(ctxbuf, 4) << endl;
+          cout << "FLOAT[" << (*it)->varname << "]" << GetLSF<float>(ctxbuf, 4) << " " << (*it)->format << " " << (*it)->varlbl << endl;
+          static_cast<StataVariablesImpl<float> *>((&*it)->get())->setValue(GetLSF<float>(ctxbuf, 4));                  
           ctxbuf += 4;
           break;
         case ST_LONG:
-          cout << "LONG[" << (*it)->varname << "]" << GetLSF<int32_t>(ctxbuf, 4) << endl;
+          cout << "LONG[" << (*it)->varname << "]" << GetLSF<int32_t>(ctxbuf, 4) << " " << (*it)->format << " " << (*it)->varlbl << endl;
+          static_cast<StataVariablesImpl<int32_t> *>((&*it)->get())->setValue(GetLSF<int32_t>(ctxbuf, 4));        
           ctxbuf += 4;
           break;
         case ST_INT:
-          cout << "INTEGER[" << (*it)->varname << "]" << GetLSF<int16_t>(ctxbuf, 4) << endl;
+          cout << "INTEGER[" << (*it)->varname << "]" << GetLSF<int16_t>(ctxbuf, 2) << " " << (*it)->format << " " << (*it)->varlbl << endl;
+          static_cast<StataVariablesImpl<int16_t> *>((&*it)->get())->setValue(GetLSF<int16_t>(ctxbuf, 2));
           ctxbuf += 2;
           break;
         case ST_BYTE:

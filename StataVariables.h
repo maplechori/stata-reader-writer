@@ -29,7 +29,7 @@ class StataVariablesImpl : public StataVariables
   public:
     StataVariablesImpl(){};
     StataVariablesImpl(const StataVariablesImpl &orig){};
-    virtual ~StataVariablesImpl() { cout << "cleaning" << endl; };
+    virtual ~StataVariablesImpl() {};
     T getValue() { return value; };
     void setValue(T t) { value = t; }
 

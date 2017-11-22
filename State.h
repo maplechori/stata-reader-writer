@@ -17,6 +17,7 @@ using namespace std;
 class Context;
 
 #define CHECK_TAG(tag) ((!strcasecmp(buffer, tag)) ? true : false)
+#define INITIAL_BUFFER 1024
 
 class State
 {
@@ -32,6 +33,7 @@ class Context
 
 public:
   Context(char *cursor, int length);
+  virtual ~Context();
   void *advance();
   StataHeader hdr;
   StataMap map;
@@ -39,11 +41,11 @@ public:
   bool strls;
   char *origin;
   vector< boost::shared_ptr<StataVariables> > vList;
-  char *getbuffer() { return &buffer[0]; }
   char *getCursor() { return cursor; }
-  void setCursor(char *cursor) { this->cursor = cursor; }
+  void clearCursor() { cursor = NULL; }
   void advanceNoState();
   void advanceCursor(int c);
+  void advanceData(int c);  
 
   string getChars(int count)
   {
@@ -53,11 +55,19 @@ public:
     return tmp;
   };
 
+  void resizeBuffer(int sz)
+  {
+      delete [] buffer;
+      buffer_size = sz + 1;
+      buffer = new char[buffer_size];
+  };
+
   void exportToDB(char *filename);
 
 private:
   sqlite3 *db;
-  char buffer[1000000];
+  char *buffer;
+  int buffer_size;
   char *cursor;
   char *start;
   int length;

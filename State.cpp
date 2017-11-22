@@ -6,35 +6,64 @@ Context::Context(char *cursor, int length) : start(0), strls(false)
   this->cursor = cursor;
   this->length = length;
   this->currentState = new OpenDTA();
+  this->buffer = new char[INITIAL_BUFFER];
+  this->buffer_size = INITIAL_BUFFER;
+}
+
+Context::~Context()
+{
+  if (currentState)
+    delete currentState;
+  
+  if (buffer)
+    delete buffer;
 }
 
 void Context::exportToDB(char *filename)
 {
+
 }
 
+void Context::advanceData(int c)
+{
+  int curr_length=0, curr_position = 0;
+  char *prev_cursor = cursor;
+ 
+  for (start = cursor; curr_position <= c; cursor++, curr_position++);
+ 
+  curr_length = cursor - prev_cursor;
+
+  if (curr_length > buffer_size)
+    resizeBuffer(curr_length);
+
+  memset(buffer, 0, buffer_size);
+  strncpy(buffer, start, curr_length);
+
+}
 
 void Context::advanceNoState()
 {
-  if ((cursor - origin) >= length)
-    return;
+  int curr_length=0;
+  int i = 0;
 
-  for (start = cursor; cursor && *cursor != '>'; cursor++)
-    ;
 
-  if (cursor && *cursor == '>')
+  for (start = cursor; cursor && (cursor - origin) < length && *cursor != '>'; cursor++);
+
+  if (cursor && *cursor++ == '>')
   {
-    cursor++;
-    memset(buffer, 0, sizeof(buffer));
-    strncpy(buffer, start, cursor - start); /* buffer overflow */
-    buffer[cursor - start] = '\0';
+    curr_length = cursor - start;
+        
+    if (curr_length > buffer_size)
+      resizeBuffer(curr_length);
+
+    memset(buffer, 0, buffer_size);
+    strncpy(buffer, start, curr_length);
   }
+
 }
 
 void Context::advanceCursor(int c)
 {
-  if ((cursor - origin) >= length)
-    return;
-
   cursor += c;
   advanceNoState();
 }
@@ -46,16 +75,16 @@ void * Context::advance()
 
   while (currentState && currentState->check(buffer))
   {
-    currentState->process(*this);
+      currentState->process(*this);
 
-    if (currentState)
-    {
-      State *newState = currentState->advanceState();
-      delete currentState;
-      currentState = newState;
-    }
+      if (currentState)
+      {
+        State * newState = currentState->advanceState();
+        delete currentState;
+        currentState = newState;
+      }
   }
-
+  
   return (void *)(start);
 }
 
@@ -73,11 +102,12 @@ State *OpenDTA::advanceState()
 
 bool CloseDTA::process(Context &ctx)
 {
-  return true;
+  return false;
 }
 
 State *CloseDTA::advanceState()
 {
+  cout << "DONE DONE" << endl;
   return NULL;
 }
 
@@ -731,23 +761,27 @@ bool CloseCH::process(Context &ctx)
 
 State *OpenData::advanceState()
 {
+  cout << "advancing to OpenSTRL()" << endl;
   return new OpenSTRL();
 }
 
 bool OpenData::process(Context &ctx)
 {
-  char *ctxbuf = (char *)ctx.advance(), *start = NULL;
+  char *ctxbuf = (char *)ctx.getCursor(), *start_ctx = NULL;
   int curr = 0, sz = 0;
-  double _dbl = 0;
 
+  start_ctx = ctxbuf;
+  
   if (ctx.hdr.fileByteorder == LSF)
   {
     vector<boost::shared_ptr<StataVariables> >::iterator it;
+    
     for (int j = 0; j < ctx.hdr.observations; j++)
     {
-      start = ctxbuf;
+      
+      cout << "OBSERVATION: " << j + 1 << endl;
 
-      for (it = ctx.vList.begin(); it != ctx.vList.end() && *ctxbuf != '<' && *(ctxbuf + 1) != '/'; ++it)
+      for (it = ctx.vList.begin(); it != ctx.vList.end(); ++it)
       {
 
         switch ((*it)->type)
@@ -756,30 +790,29 @@ bool OpenData::process(Context &ctx)
           cout << "STRL" << endl;
           ctx.strls = true;
           // handle STRLs
-
           break;
         case ST_DOUBLE:
-          cout << "DOUBLE[" << (*it)->varname << "]" << GetLSF<double>(ctxbuf, 8) << " " << (*it)->format << " " << (*it)->varlbl << endl;
+          //cout << "DOUBLE[" << (*it)->varname << "]" << GetLSF<double>(ctxbuf, 8) << " " << (*it)->format << " " << (*it)->varlbl << endl;
           static_cast<StataVariablesImpl<double> *>((&*it)->get())->setValue(GetLSF<double>(ctxbuf, 8));   
           ctxbuf += 8;
           break;
         case ST_FLOAT:
-          cout << "FLOAT[" << (*it)->varname << "]" << GetLSF<float>(ctxbuf, 4) << " " << (*it)->format << " " << (*it)->varlbl << endl;
+          //cout << "FLOAT[" << (*it)->varname << "]" << GetLSF<float>(ctxbuf, 4) << " " << (*it)->format << " " << (*it)->varlbl << endl;
           static_cast<StataVariablesImpl<float> *>((&*it)->get())->setValue(GetLSF<float>(ctxbuf, 4));                  
           ctxbuf += 4;
           break;
         case ST_LONG:
-          cout << "LONG[" << (*it)->varname << "]" << GetLSF<long>(ctxbuf, 4) << " " << (*it)->format << " " << (*it)->varlbl << endl;
+          //cout << "LONG[" << (*it)->varname << "]" << GetLSF<long>(ctxbuf, 4) << " " << (*it)->format << " " << (*it)->varlbl << endl;
           static_cast<StataVariablesImpl<long> *>((&*it)->get())->setValue(GetLSF<long>(ctxbuf, 4));        
           ctxbuf += 4;
           break;
         case ST_INT:
-          cout << "INTEGER[" << (*it)->varname << "]" << GetLSF<short>(ctxbuf, 2) << " " << (*it)->format << " " << (*it)->varlbl << endl;
+          //cout << "INTEGER[" << (*it)->varname << "]" << GetLSF<short>(ctxbuf, 2) << " " << (*it)->format << " " << (*it)->varlbl << endl;
           static_cast<StataVariablesImpl<short> *>((&*it)->get())->setValue(GetLSF<short>(ctxbuf, 2));
           ctxbuf += 2;
           break;
         case ST_BYTE:
-          cout << "BYTE[" << (*it)->varname << "]" << (short)GetLSF<int8_t>(ctxbuf, 1) << " " << (*it)->format << " " << (*it)->varlbl << endl;
+          //cout << "BYTE[" << (*it)->varname << "]" << (short)GetLSF<int8_t>(ctxbuf, 1) << " " << (*it)->format << " " << (*it)->varlbl << endl;
           static_cast<StataVariablesImpl<int8_t> *>((&*it)->get())->setValue(GetLSF<int8_t>(ctxbuf, 1));
           ctxbuf++;
           break;
@@ -787,7 +820,7 @@ bool OpenData::process(Context &ctx)
           if ((*it)->type > 0 && (*it)->type <= 2045)
           {
             static_cast<StataVariablesImpl<string> *>((&*it)->get())->setValue(GetLSF<string>(ctxbuf, (*it)->type));
-            cout << "STRING OF LENGTH[" << (*it)->type << "][" << (*it)->varname << "] " << (static_cast<StataVariablesImpl<string> *>((&*it)->get())->getValue()) << " " << (*it)->format << " " << (*it)->varlbl << endl;
+            //cout << "STRING OF LENGTH[" << (*it)->type << "][" << (*it)->varname << "] " << (static_cast<StataVariablesImpl<string> *>((&*it)->get())->getValue()) << " " << (*it)->format << " " << (*it)->varlbl << endl;
             ctxbuf += (*it)->type;
           }
           else
@@ -795,15 +828,20 @@ bool OpenData::process(Context &ctx)
           break;
         }
       }
-      //ctx.advanceCursor(ctxbuf - start);
+
+      //
+      //ctx.advance();
     }
   }
   else
   {
     // not implemented yet
   }
-
+ 
+  //ctx.advanceCursor(ctxbuf-start_ctx);  
+  ctx.advanceData(ctxbuf-start_ctx);
   ctx.advance();
+  ctx.advance();  
   return true;
 }
 
@@ -850,7 +888,7 @@ bool OpenValueLabel::process(Context &ctx)
 State *CloseValueLabel::advanceState()
 {
   cout << "DONE" << endl;
-  return new CloseDTA();
+  return NULL;
 }
 
 bool CloseValueLabel::process(Context &ctx)
@@ -882,19 +920,15 @@ bool OpenInnerValueLabel::process(Context &ctx)
     case R119:
     case R118:
 
-      cout << "Length value label table: " << GetLSF<int32_t>(ctxbuf, 4) << endl; // += 4;
       totalSize = GetLSF<uint32_t>(ctxbuf, 4);
       ctxbuf += 4;
       sz = strlen((char *)ctxbuf);
-      cout << "SZ: " << sz << endl;
       svl->labname.assign(&ctxbuf[0], sz);
       cout << svl->labname << endl;
       ctxbuf += 132;
       entries = GetLSF<uint32_t>(ctxbuf, 4);
-      cout << "entries: " << entries << endl;
       ctxbuf += 4;
       txtlen = GetLSF<uint32_t>(ctxbuf, 4);
-      cout << "txtlen: " << txtlen << endl;
       ctxbuf += 4;
 
       offsets = new int[entries];

@@ -2,8 +2,8 @@ TARGETS=main test
 CC=g++
 CFLAGS=
 DEBUG=-g
-LDFLAGS=-lboost_system -lboost_unit_test_framework
-SOURCES=main.cpp StataHeader.cpp StataMap.cpp StataVariables.cpp StataValueLabel.cpp State.cpp StateBitops.cpp
+LDFLAGS=-lboost_system -lboost_unit_test_framework -lsqlite3
+SOURCES=main.cpp StataHeader.cpp StataMap.cpp StataVariables.cpp StataValueLabel.cpp State.cpp StateBitops.cpp SQLite.cpp
 OBJECTS=$(SOURCES:.c=.o)
 EXECUTABLE=main
 

@@ -38,6 +38,10 @@ int main(int argc, char **argv)
 
   ctx = new Context((char *)stata.c_str(), stata.length());
 
-  if (ctx != NULL)
+  if (ctx != NULL) {
     ctx->advance();
+    ctx->exportToDB((char *)"export_context.db");
+  }
+
+  
 }

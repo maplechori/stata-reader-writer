@@ -19,9 +19,10 @@ Context::~Context()
     delete buffer;
 }
 
-void Context::exportToDB(char *filename)
-{
 
+int Context::exportToDB(char *filename)
+{
+ 
 }
 
 void Context::advanceData(int c)

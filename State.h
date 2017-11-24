@@ -4,13 +4,13 @@
 #include <vector>
 #include <string.h>
 #include <memory>
-#include <sqlite3.h>
 #include "StataHeader.h"
 #include "StataVariables.h"
 #include "StataRead.h"
 #include "StateBitops.h"
 #include "StataMap.h"
 #include "StataValueLabel.h"
+#include "StataDB.h"
 
 using namespace std;
 
@@ -62,10 +62,9 @@ public:
       buffer = new char[buffer_size];
   };
 
-  void exportToDB(char *filename);
+  int exportToDB(char *filename);
 
 private:
-  sqlite3 *db;
   char *buffer;
   int buffer_size;
   char *cursor;

@@ -10,6 +10,7 @@
 #include <string>
 #include <stdint.h>
 #include <map>
+#include <sstream>
 
 using namespace std;
 
@@ -29,13 +30,14 @@ public:
     StataHeader();
     StataHeader(const StataHeader& orig);
     
-    int variables;
+    uint32_t variables;
     uint64_t observations;
     std::string ts;
     std::string datalabel;
     enum release fileRelease;
     enum byteOrder fileByteorder;
     virtual ~StataHeader();
+    string showHeader();
 private:
 
 };

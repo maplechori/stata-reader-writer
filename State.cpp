@@ -108,7 +108,6 @@ bool CloseDTA::process(Context &ctx)
 
 State *CloseDTA::advanceState()
 {
-  cout << "DONE DONE" << endl;
   return NULL;
 }
 
@@ -187,17 +186,22 @@ bool OpenK::process(Context &ctx)
   {
     char *ctxbuf = (char *)ctx.advance();
 
+   
+
     switch (ctx.hdr.fileRelease)
     {
     // 4 byte
     case R119:
-    case R118:
-      ctx.hdr.variables = GetLSF<int>(ctxbuf, 4);
+      if (ctxbuf[2] == '<' && ctxbuf[3] == '/')
+        ctx.hdr.variables = GetLSF<uint16_t>(ctxbuf, 2);
+      else 
+        ctx.hdr.variables = GetLSF<uint32_t>(ctxbuf, 4);
       break;
 
     // 2 byte
+    case R118:
     case R117:
-      ctx.hdr.variables = GetLSF<short>(ctxbuf, 2);
+      ctx.hdr.variables = GetLSF<uint16_t>(ctxbuf, 2);
       break;
 
     default:
@@ -249,7 +253,6 @@ bool OpenN::process(Context &ctx)
     // MSF not implemented yet
   }
 
-  cout << "OBSERVATIONS: " << ctx.hdr.observations << endl;
 
   ctx.advance();
   return true;
@@ -780,8 +783,6 @@ bool OpenData::process(Context &ctx)
     for (int j = 0; j < ctx.hdr.observations; j++)
     {
       
-      cout << "OBSERVATION: " << j + 1 << endl;
-
       for (it = ctx.vList.begin(); it != ctx.vList.end(); ++it)
       {
 
@@ -888,7 +889,6 @@ bool OpenValueLabel::process(Context &ctx)
 
 State *CloseValueLabel::advanceState()
 {
-  cout << "DONE" << endl;
   return NULL;
 }
 
@@ -925,7 +925,7 @@ bool OpenInnerValueLabel::process(Context &ctx)
       ctxbuf += 4;
       sz = strlen((char *)ctxbuf);
       svl->labname.assign(&ctxbuf[0], sz);
-      cout << svl->labname << endl;
+      //cout << svl->labname << endl;
       ctxbuf += 132;
       entries = GetLSF<uint32_t>(ctxbuf, 4);
       ctxbuf += 4;
@@ -950,7 +950,7 @@ bool OpenInnerValueLabel::process(Context &ctx)
       ctxbuf += 4;
       sz = strlen((char *)ctxbuf);
       svl->labname.assign(&ctxbuf[0], sz);
-      cout << svl->labname << endl;
+      //cout << svl->labname << endl;
       ctxbuf += 36;
       entries = GetLSF<uint32_t>(ctxbuf, 4);
       ctxbuf += 4;
@@ -984,13 +984,11 @@ bool OpenInnerValueLabel::process(Context &ctx)
   if (ctxbuf[0] == '<' && ctxbuf[1] == '/' && ctxbuf[2] == 'l' && ctxbuf[6] == '<' && ctxbuf[8] != 'v')
   {
     setHasMoreLabels(true);
-    cout << "HAS MORE LABELS" << endl;
     ctx.advance();
     ctx.advance();
   }
   else
   {
-    cout << "NO MORE LABELS" << endl;
     setHasMoreLabels(false);
     ctx.advance();
   }

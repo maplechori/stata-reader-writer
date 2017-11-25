@@ -1,16 +1,16 @@
-TARGETS=main test
+TARGETS=stata_readwrite stata_readwrite_test
 CC=g++
 CFLAGS=
 DEBUG=-g
-LDFLAGS=-lboost_system -lboost_unit_test_framework -lsqlite3
+LDFLAGS=-lboost_system -lboost_program_options -lboost_unit_test_framework -lsqlite3
 SOURCES=main.cpp StataHeader.cpp StataMap.cpp StataVariables.cpp StataValueLabel.cpp State.cpp StateBitops.cpp SQLite.cpp
 OBJECTS=$(SOURCES:.c=.o)
-EXECUTABLE=main
+EXECUTABLE=stata_readwrite
 
 SOURCES_TEST = $(filter-out main.cpp, $(SOURCES))
 SOURCES_TEST += StataTest.cpp
 OBJECTS_TEST=$(SOURCES_TEST:.c=.o)
-EXECUTABLE_TEST = main_test
+EXECUTABLE_TEST = stata_readwrite_test
 
 all: $(TARGETS)
 
@@ -31,5 +31,5 @@ $(EXECUTABLE_TEST): $(OBJECTS_TEST)
 
 clean:
 		rm -rf *.o 
-		rm -rf main main_test
+		rm -rf stata_readwrite stata_readwrite_test
 

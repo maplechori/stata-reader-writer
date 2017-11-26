@@ -1,4 +1,5 @@
-
+#ifndef __STATA_DB__
+#define __STATA_DB__
 
 enum DatabaseTypes {
     SQLITE = 0
@@ -13,3 +14,4 @@ public:
   virtual ~Database() {};
 };
 
+#endif

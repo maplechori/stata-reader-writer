@@ -14,11 +14,13 @@
 #include <boost/regex.hpp>
 #include <boost/variant.hpp>
 #include <boost/program_options.hpp>
+#include <exception>
 #include <list>
 #include <boost/asio.hpp>
 #include "StataHeader.h"
 #include "StataVariables.h"
 #include "StataRead.h"
+#include "StataDB.h"
 #include "State.h"
 
 using namespace boost;
@@ -42,45 +44,72 @@ int main(int argc, char **argv)
   namespace po = boost::program_options;
   Context *ctx = NULL;
 
-  po::options_description desc("Allowed options");
-  desc.add_options()
-  ("help", "produce help message")
-  ("stata-file", po::value< string >(), "stata file")
-  ("metadata,m", "show metadata")
-  ;
-
-  po::positional_options_description p;
-  p.add("stata-file", -1);
-  
-
-  po::variables_map args;
-  po::store (po::command_line_parser(argc, argv).options(desc).positional(p)
-  .style (po::command_line_style::default_style | po::command_line_style::allow_long_disguise)
-  .run (), args);
-  po::notify(args);
-
-  if (args.count("help") || !args.count("stata-file"))
+  try
   {
-    cout << "Usage: " << PROGRAM_NAME << " [options] <stata file>\n";
-    cout << desc;
-    return 0;
+    po::options_description desc("General options");
+    desc.add_options()
+    ("help", "produce help message")
+    ("stata-file", po::value< string >(), "stata file")
+    ;
+
+    po::options_description db_export("Export options");
+    db_export.add_options()
+    ("sqlite", po::value< string >(), "sqlite database filename")
+    ("csv", po::value<string >(), "csv export")
+    ;
+
+    po::positional_options_description p;
+    p.add("stata-file", -1);
+    
+    po::options_description all("Allowed options");
+    all.add(desc).add(db_export);
+    
+    po::variables_map args;
+    
+    po::store (po::command_line_parser(argc, argv).options(all).positional(p)
+    .style (po::command_line_style::default_style | po::command_line_style::allow_long_disguise)
+    .run (), args);
+
+    po::notify(args);
+
+    if (args.count("help") || !args.count("stata-file"))
+    {
+      cout << "Usage: " << PROGRAM_NAME << " [options] <stata file>\n";
+      cout << all;
+      return 0;
+    }
+
+    ifstream stfs(args["stata-file"].as< string >().c_str(), ios::in | ios::binary);
+    std::string stata((std::istreambuf_iterator<char>(stfs)), std::istreambuf_iterator<char>());
+    ctx = new Context((char *)stata.c_str(), stata.length());
+
+    if (ctx != NULL) {
+      ctx->advance();
+    }
+
+    
+ 
+    if (args.count("db") && args.count("filename"))
+    {
+      cout << "Exporting to " << args["db"].as< string >().c_str() << endl;
+      //ctx->exportToDB((char *)args["db"].as< string >().c_str());
+    }
+    else if (args.count("csv"))
+    {
+
+    }
+    else
+    {
+        // Show the metadata of the file and exit 
+         cout << "Information on Stata file: " << args["stata-file"].as< string >() << endl;
+         cout << ctx->hdr.showHeader() << endl;
+    }
+
   }
-
-  ifstream stfs(args["stata-file"].as< string >().c_str(), ios::in | ios::binary);
-  std::string stata((std::istreambuf_iterator<char>(stfs)), std::istreambuf_iterator<char>());
-  ctx = new Context((char *)stata.c_str(), stata.length());
-
-  if (ctx != NULL) {
-    ctx->advance();
+  catch(std::exception& e) {
+      cout << e.what() << "\n";
   }
-
-  // Show the metadata
-  if (args.count("metadata"))
-  {
-    cout << ctx->hdr.showHeader() << endl;
-  }
-
-  
+    
 
   
   

@@ -55,13 +55,12 @@ string StataHeader::showHeader() {
    }
 
    
-   metadata << "[Metadata]" << endl
-            << "Variables: " << variables << endl
-            << "Observations: " << observations << endl
-            << "Time Stamp: " << ts << endl
-            << "Data Label: " << datalabel << endl
-            << "Release: " << textRelease << endl
-            << "Bitness: " << (fileByteorder ? "Big Endian" : "Little Endian" ) << endl;
+   metadata << "[Variables]: " << variables << endl
+            << "[Observations]: " << observations << endl
+            << "[Time Stamp]: " << ts << endl
+            << "[Data Label]: " << datalabel << endl
+            << "[Release]: " << textRelease << endl
+            << "[Bitness]: " << (fileByteorder ? "Big Endian" : "Little Endian" ) << endl;
 
 
    return string(metadata.str());

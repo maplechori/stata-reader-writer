@@ -20,8 +20,11 @@ Context::~Context()
 }
 
 
-int Context::exportToDB(char *filename)
+int Context::exportToDB(DatabaseTypes db_type, void * params)
 {
+
+
+
  
 }
 

@@ -62,7 +62,7 @@ public:
       buffer = new char[buffer_size];
   };
 
-  int exportToDB(char *filename);
+  int exportToDB(DatabaseTypes db_type, void * params);
 
 private:
   char *buffer;

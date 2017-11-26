@@ -55,7 +55,6 @@ int main(int argc, char **argv)
     po::options_description db_export("Export options");
     db_export.add_options()
     ("sqlite", po::value< string >(), "sqlite database filename")
-    ("csv", po::value<string >(), "csv export")
     ;
 
     po::positional_options_description p;
@@ -93,10 +92,6 @@ int main(int argc, char **argv)
     {
       cout << "Exporting to " << args["db"].as< string >().c_str() << endl;
       //ctx->exportToDB((char *)args["db"].as< string >().c_str());
-    }
-    else if (args.count("csv"))
-    {
-
     }
     else
     {

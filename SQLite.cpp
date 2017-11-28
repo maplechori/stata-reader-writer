@@ -1,6 +1,7 @@
 #include "SQLite.h"
 #include <cstdio>
 
+
 static int callback(void *NotUsed, int argc, char **argv, char **azColName){
     int i;
     
@@ -13,9 +14,13 @@ static int callback(void *NotUsed, int argc, char **argv, char **azColName){
   }
 
 SQLite::SQLite() {
-    
+
 }
   
+bool SQLite::write(Context & ctx) {
+
+    return true;
+}
 
 bool SQLite::connect(void * ptr) {
 

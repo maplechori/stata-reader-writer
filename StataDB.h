@@ -9,7 +9,7 @@ enum DatabaseTypes {
 class Database
 {
 public:
-  virtual bool connect() = 0;
+  virtual bool connect(void *) = 0;
   virtual bool close() = 0;
   virtual ~Database() {};
 };

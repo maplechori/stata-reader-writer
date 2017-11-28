@@ -6,6 +6,7 @@
 class SQLite : public Database {
   
 public:
+    SQLite();
     bool connect(void *);
     bool close();
     ~SQLite();

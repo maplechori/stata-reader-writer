@@ -1,4 +1,5 @@
 #include "State.h"
+#include "SQLite.h"
 
 Context::Context(char *cursor, int length) : start(0), strls(false)
 {
@@ -22,9 +23,34 @@ Context::~Context()
 
 int Context::exportToDB(DatabaseTypes db_type, void * params)
 {
+  Database * db_obj = NULL;
+
+  switch(db_type) 
+  {
+    case SQLITE:
+        db_obj = (Database *)new SQLite();
+        break;
+  }
 
 
+  if (db_obj)
+  {
+      if (db_obj->connect((char*)params))
+      {
+        /* start writing the database */
 
+        /* finished */
+        db_obj->close();
+      }
+
+      delete db_obj;
+      db_obj = NULL;
+  }
+  else
+  {
+    cout << "Couldn't create a database object to export the database"  << endl;
+    return 0;
+  }
  
 }
 

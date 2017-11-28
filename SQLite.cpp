@@ -11,6 +11,10 @@ static int callback(void *NotUsed, int argc, char **argv, char **azColName){
     //printf("\n");
     return 0;
   }
+
+SQLite::SQLite() {
+    
+}
   
 
 bool SQLite::connect(void * ptr) {

@@ -10,3 +10,18 @@ of the richness that is provided by a full Stata dataset.
 Reads format 117/118/119 (Stata 13, 14 and 15) and extracts the metadata. Only works on LSB datasets.
 
 Writing output files is not started yet, I will focus on SQLite first.
+
+```bash
+
+stata-reader-writer$ ./stata_readwrite
+Usage: stata_readwrite [options] <stata file>
+Allowed options:
+
+General options:
+  --help                          produce help message
+  --stata-file arg                stata input file
+
+Database options:
+  -d [ --db-type ] arg            select database type [sqlite]
+  -c [ --connection-string ] arg  connection string
+```

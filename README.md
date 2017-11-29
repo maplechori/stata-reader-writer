@@ -11,6 +11,8 @@ Reads format 117/118/119 (Stata 13, 14 and 15) and extracts the metadata. Only w
 
 Writing output files is not started yet, I will focus on SQLite first.
 
+Program options
+
 ```bash
 
 stata-reader-writer$ ./stata_readwrite
@@ -24,4 +26,20 @@ General options:
 Database options:
   -d [ --db-type ] arg            select database type [sqlite]
   -c [ --connection-string ] arg  connection string
+```
+
+Checking the metadata of a file
+
+```bash
+
+stata-reader-writer$ ./stata_readwrite --stata-file myhousehold118.dta
+advancing to OpenSTRL()
+no strls, next
+Information on Stata file: myhousehold118.dta
+[Variables]: 135
+[Observations]: 1
+[Time Stamp]:  4 Oct 2017 10:50
+[Data Label]:
+[Release]: 119
+[Bitness]: Little Endian
 ```

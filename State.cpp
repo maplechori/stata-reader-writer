@@ -1,5 +1,6 @@
 #include "Stata.h"
 #include "SQLite.h"
+#include <boost/make_shared.hpp>
 
 Context::Context(char *cursor, int length) : start(0), strls(false)
 {
@@ -38,6 +39,7 @@ int Context::exportToDB(DatabaseTypes db_type, void * params)
       if (db_obj->connect((char*)params))
       {
         /* start writing the database */
+        db_obj->write(*this);
 
         /* finished */
         db_obj->close();
@@ -802,16 +804,17 @@ bool OpenData::process(Context &ctx)
 {
   char *ctxbuf = (char *)ctx.getCursor(), *start_ctx = NULL;
   int curr = 0, sz = 0;
-
+  
   start_ctx = ctxbuf;
   
   if (ctx.hdr.fileByteorder == LSF)
   {
     vector<boost::shared_ptr<StataVariables> >::iterator it;
-    
+    vector<char *> v;
+    char * buf = NULL;
+  
     for (int j = 0; j < ctx.hdr.observations; j++)
     {
-      
       for (it = ctx.vList.begin(); it != ctx.vList.end(); ++it)
       {
 
@@ -823,35 +826,41 @@ bool OpenData::process(Context &ctx)
           // handle STRLs
           break;
         case ST_DOUBLE:
-          //cout << "DOUBLE[" << (*it)->varname << "]" << GetLSF<double>(ctxbuf, 8) << " " << (*it)->format << " " << (*it)->varlbl << endl;
-          static_cast<StataVariablesImpl<double> *>((&*it)->get())->setValue(GetLSF<double>(ctxbuf, 8));   
+          buf = new char[8];
+          memcpy(buf, ctxbuf, 8); 
+          v.push_back(buf);   
           ctxbuf += 8;
           break;
         case ST_FLOAT:
-          //cout << "FLOAT[" << (*it)->varname << "]" << GetLSF<float>(ctxbuf, 4) << " " << (*it)->format << " " << (*it)->varlbl << endl;
-          static_cast<StataVariablesImpl<float> *>((&*it)->get())->setValue(GetLSF<float>(ctxbuf, 4));                  
+          buf = new char[4];
+          memcpy(buf, ctxbuf, 4); 
+          v.push_back(buf);
           ctxbuf += 4;
           break;
         case ST_LONG:
-          //cout << "LONG[" << (*it)->varname << "]" << GetLSF<long>(ctxbuf, 4) << " " << (*it)->format << " " << (*it)->varlbl << endl;
-          static_cast<StataVariablesImpl<long> *>((&*it)->get())->setValue(GetLSF<long>(ctxbuf, 4));        
+          buf = new char[4];
+          memcpy(buf, ctxbuf, 4); 
+          v.push_back(buf);
           ctxbuf += 4;
           break;
         case ST_INT:
-          //cout << "INTEGER[" << (*it)->varname << "]" << GetLSF<short>(ctxbuf, 2) << " " << (*it)->format << " " << (*it)->varlbl << endl;
-          static_cast<StataVariablesImpl<short> *>((&*it)->get())->setValue(GetLSF<short>(ctxbuf, 2));
+          buf = new char[2];
+          memcpy(buf, ctxbuf, 2); 
+          v.push_back(buf);
           ctxbuf += 2;
           break;
         case ST_BYTE:
-          //cout << "BYTE[" << (*it)->varname << "]" << (short)GetLSF<int8_t>(ctxbuf, 1) << " " << (*it)->format << " " << (*it)->varlbl << endl;
-          static_cast<StataVariablesImpl<int8_t> *>((&*it)->get())->setValue(GetLSF<int8_t>(ctxbuf, 1));
+          buf = new char[1];
+          memcpy(buf, ctxbuf,1); 
+          v.push_back(buf);          
           ctxbuf++;
           break;
         default:
           if ((*it)->type > 0 && (*it)->type <= 2045)
           {
-            static_cast<StataVariablesImpl<string> *>((&*it)->get())->setValue(GetLSF<string>(ctxbuf, (*it)->type));
-            //cout << "STRING OF LENGTH[" << (*it)->type << "][" << (*it)->varname << "] " << (static_cast<StataVariablesImpl<string> *>((&*it)->get())->getValue()) << " " << (*it)->format << " " << (*it)->varlbl << endl;
+            buf = new char[(*it)->type + 1];
+            memcpy(buf, ctxbuf,(*it)->type); 
+            v.push_back(buf);
             ctxbuf += (*it)->type;
           }
           else
@@ -860,9 +869,11 @@ bool OpenData::process(Context &ctx)
         }
       }
 
-      //
+      ctx.vData.push_back(v);
       //ctx.advance();
     }
+
+    
   }
   else
   {
@@ -954,7 +965,6 @@ bool OpenInnerValueLabel::process(Context &ctx)
       ctxbuf += 4;
       sz = strlen((char *)ctxbuf);
       svl->labname.assign(&ctxbuf[0], sz);
-      //cout << svl->labname << endl;
       ctxbuf += 132;
       entries = GetLSF<uint32_t>(ctxbuf, 4);
       ctxbuf += 4;
@@ -979,7 +989,6 @@ bool OpenInnerValueLabel::process(Context &ctx)
       ctxbuf += 4;
       sz = strlen((char *)ctxbuf);
       svl->labname.assign(&ctxbuf[0], sz);
-      //cout << svl->labname << endl;
       ctxbuf += 36;
       entries = GetLSF<uint32_t>(ctxbuf, 4);
       ctxbuf += 4;

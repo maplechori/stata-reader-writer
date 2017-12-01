@@ -41,6 +41,7 @@ public:
   bool strls;
   char *origin;
   vector< boost::shared_ptr<StataVariables> > vList;
+  vector < vector < char *  > > vData;
   char *getCursor() { return cursor; }
   void clearCursor() { cursor = NULL; }
   void advanceNoState();

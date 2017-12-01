@@ -23,6 +23,7 @@ class StataVariables
     std::string varlbl;
 };
 
+
 template <class T>
 class StataVariablesImpl : public StataVariables
 {

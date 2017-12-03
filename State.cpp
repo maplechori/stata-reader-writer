@@ -809,13 +809,13 @@ bool OpenData::process(Context &ctx)
   
   if (ctx.hdr.fileByteorder == LSF)
   {
-    vector<boost::shared_ptr<StataVariables> >::iterator it;
-    vector<char *> v;
     char * buf = NULL;
   
     for (int j = 0; j < ctx.hdr.observations; j++)
     {
-      for (it = ctx.vList.begin(); it != ctx.vList.end(); ++it)
+      int k = 0;
+      vector<char *> * v = new vector<char *>(0);
+      for (vector<boost::shared_ptr<StataVariables> >::iterator it = ctx.vList.begin(); it != ctx.vList.end(); ++it)
       {
 
         switch ((*it)->type)
@@ -828,39 +828,42 @@ bool OpenData::process(Context &ctx)
         case ST_DOUBLE:
           buf = new char[8];
           memcpy(buf, ctxbuf, 8); 
-          v.push_back(buf);   
+          v->push_back(buf);   
           ctxbuf += 8;
           break;
         case ST_FLOAT:
           buf = new char[4];
           memcpy(buf, ctxbuf, 4); 
-          v.push_back(buf);
+          v->push_back(buf);
           ctxbuf += 4;
           break;
         case ST_LONG:
           buf = new char[4];
           memcpy(buf, ctxbuf, 4); 
-          v.push_back(buf);
+          v->push_back(buf);
           ctxbuf += 4;
           break;
         case ST_INT:
           buf = new char[2];
           memcpy(buf, ctxbuf, 2); 
-          v.push_back(buf);
+          v->push_back(buf);
           ctxbuf += 2;
           break;
         case ST_BYTE:
           buf = new char[1];
           memcpy(buf, ctxbuf,1); 
-          v.push_back(buf);          
+          v->push_back(buf);          
           ctxbuf++;
           break;
         default:
           if ((*it)->type > 0 && (*it)->type <= 2045)
           {
             buf = new char[(*it)->type + 1];
-            memcpy(buf, ctxbuf,(*it)->type); 
-            v.push_back(buf);
+            memset(buf, 0, (*it)->type + 1);
+            memcpy(buf, ctxbuf,(*it)->type);
+            cout << "[" << j << "," << k << "]" << buf << endl; 
+            v->push_back(buf);
+            
             ctxbuf += (*it)->type;
           }
           else
@@ -869,7 +872,9 @@ bool OpenData::process(Context &ctx)
         }
       }
 
+      cout << "v size: " << v->size() << endl;
       ctx.vData.push_back(v);
+      cout << ctx.vData.size() <<  endl;
       //ctx.advance();
     }
 

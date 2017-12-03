@@ -53,7 +53,6 @@ bool SQLite::write(Context & ctx) {
                      ",'" << ((StataVariables)*ctx.vList[j]).vallbl << "'" <<
                      ",'" << ((StataVariables)*ctx.vList[j]).varlbl << "')"; 
     
-        cout << sql_query.str().c_str() << endl;
         rc = sqlite3_exec(db, sql_query.str().c_str() , NULL, 0, &zErrMsg);   
 
         if( rc != SQLITE_OK )
@@ -78,6 +77,9 @@ bool SQLite::write(Context & ctx) {
       sqlite3_free(zErrMsg);
       return false;
     }
+
+    sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &zErrMsg);
+
     
     sqlite3_stmt *stmt = NULL;
     rc = sqlite3_prepare_v2(db, "INSERT INTO VARDATA ( OBS, VARPOS, VALUE, SIZER ) VALUES ( ?, ?, ?, ? )", -1, &stmt, NULL);
@@ -114,30 +116,23 @@ bool SQLite::write(Context & ctx) {
                         cout << "Strl " << endl;             
                         break;
                     case ST_DOUBLE:  
-                        //sql_query << /*GetLSF<double>(*/(*ctx.vData[k])[j]/*, 8)*/ << ", 8);";
                         sz=8;
                         break;
                     case ST_FLOAT:
-                        //sql_query << /*GetLSF<float>(*/(*ctx.vData[k])[j] /*, 4)*/ << ", 4);";
                         sz=4;
                         break;
                     case ST_LONG:
-                        //sql_query << /*GetLSF<long>(*/(*ctx.vData[k])[j] /*, 4)*/ << ", 4);";
                         sz=4;
                         break;
                     case ST_INT:
-                        //sql_query << /*GetLSF<short>(*/(*ctx.vData[k])[j] /*, 2)*/ << ", 2);";
                         sz=2;
                         break;
                     case ST_BYTE:
-                        //sql_query << /*GetLSF<int8_t>(*/(*ctx.vData[k])[j]/*, 1)*/ << ", 1);";
                         sz=1;
                         break;
                     default: 
-                        //sql_query << /*"'" <<  GetLSF<string>(*/(*ctx.vData[k])[j] /*, strlen((*ctx.vData[k])[j]) << "'" << */ << "," << strlen((*ctx.vData[k])[j]) << ");";                
                         sz=strlen((*ctx.vData[k])[j]);
                         break;
-
                 }                  
 
                 rc = sqlite3_bind_blob(stmt,3, (*ctx.vData[k])[j], sz, SQLITE_STATIC);
@@ -160,12 +155,14 @@ bool SQLite::write(Context & ctx) {
                     cerr << "SQL error: "  << sqlite3_errmsg(db) << endl;
                     return false;
                 }
-                
+                    
+                sqlite3_clear_bindings(stmt);    /* Clear bindings */
                 sqlite3_reset(stmt);
             }
         }
     } 
     
+    sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &zErrMsg);
     sqlite3_finalize(stmt);    
     return true;
 }

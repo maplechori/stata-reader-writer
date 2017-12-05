@@ -510,6 +510,7 @@ bool OpenVarNames::process(Context &ctx)
         sz = strlen(ctxbuf);
         /*wcslen((wchar_t *)ctxbuf);*/
         (ctx.vList.at(curr))->varname.assign(&ctxbuf[0], sz);
+        cout <<  (ctx.vList.at(curr))->varname << endl;
         ctxbuf += 129;
         break;
       // ASCII
@@ -861,7 +862,6 @@ bool OpenData::process(Context &ctx)
             buf = new char[(*it)->type + 1];
             memset(buf, 0, (*it)->type + 1);
             memcpy(buf, ctxbuf,(*it)->type);
-            cout << "[" << j << "," << k << "]" << buf << endl; 
             v->push_back(buf);
             
             ctxbuf += (*it)->type;
@@ -872,20 +872,14 @@ bool OpenData::process(Context &ctx)
         }
       }
 
-      cout << "v size: " << v->size() << endl;
-      ctx.vData.push_back(v);
-      cout << ctx.vData.size() <<  endl;
-      //ctx.advance();
+      ctx.vData.push_back(v);    
     }
-
-    
   }
   else
   {
     // not implemented yet
   }
  
-  //ctx.advanceCursor(ctxbuf-start_ctx);  
   ctx.advanceData(ctxbuf-start_ctx);
   ctx.advance();
   ctx.advance();  

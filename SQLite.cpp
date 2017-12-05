@@ -23,6 +23,8 @@ bool SQLite::write(Context & ctx) {
     char *zErrMsg = 0;
     int rc;
     stringstream sql_query;
+    sqlite3_stmt *stmt = NULL;
+
     
 
 
@@ -43,27 +45,68 @@ bool SQLite::write(Context & ctx) {
 
     sql_query.str("");
 
+    rc = sqlite3_prepare_v2(db, "INSERT INTO VARIABLES (VARPOS, VARNAME, VARTYPE, VARFORMAT, VALUELABEL, VARIABLELABEL ) VALUES ( NULL, ?, ?, ?, ?, ? )", -1, &stmt, NULL);
+
+    if (rc != SQLITE_OK) {
+        cerr << "SQLError prepare failed: " << sqlite3_errmsg(db) << endl;
+        return false;
+    } 
+
+    sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &zErrMsg);
 
     for (int j = 0; j < ctx.vList.size(); j++)
     {
-        sql_query << "insert into variables values ( NULL," 
-                     "'" << ((StataVariables)*ctx.vList[j]).varname << 
-                     "'," << ((StataVariables)*ctx.vList[j]).type <<
-                     ",'" << ((StataVariables)*ctx.vList[j]).format << "'" <<
-                     ",'" << ((StataVariables)*ctx.vList[j]).vallbl << "'" <<
-                     ",'" << ((StataVariables)*ctx.vList[j]).varlbl << "')"; 
-    
-        rc = sqlite3_exec(db, sql_query.str().c_str() , NULL, 0, &zErrMsg);   
+        rc = sqlite3_bind_text(stmt, 1, ((StataVariables)*ctx.vList[j]).varname.c_str(), ((StataVariables)*ctx.vList[j]).varname.length(), SQLITE_STATIC);
 
-        if( rc != SQLITE_OK )
-        {
-            cerr << "SQL error: " << zErrMsg << endl;
-            sqlite3_free(zErrMsg);
+        if (rc != SQLITE_OK) {
+            cerr << "SQLError: varname bind failed: " << sqlite3_errmsg(db) << endl;
             return false;
         }
 
-        sql_query.str("");
+        rc = sqlite3_bind_int(stmt, 2, ((StataVariables)*ctx.vList[j]).type);
+
+        if (rc != SQLITE_OK) {
+            cerr << "SQLError: type bind failed: " << sqlite3_errmsg(db) << endl;
+            return false;
+        }
+
+        rc = sqlite3_bind_text(stmt, 3, ((StataVariables)*ctx.vList[j]).format.c_str(), ((StataVariables)*ctx.vList[j]).format.length(), SQLITE_STATIC);
+
+        if (rc != SQLITE_OK) {
+            cerr << "SQLError: format bind failed: " << sqlite3_errmsg(db) << endl;
+            return false;
+        }
+
+        rc = sqlite3_bind_text(stmt, 4, ((StataVariables)*ctx.vList[j]).vallbl.c_str(), ((StataVariables)*ctx.vList[j]).vallbl.length(), SQLITE_STATIC);
+
+        if (rc != SQLITE_OK) {
+            cerr << "SQLError: vallbl bind failed: " << sqlite3_errmsg(db) << endl;
+            return false;
+        }
+
+        rc = sqlite3_bind_text(stmt, 5, ((StataVariables)*ctx.vList[j]).varlbl.c_str(), ((StataVariables)*ctx.vList[j]).varlbl.length(), SQLITE_STATIC);
+
+        if (rc != SQLITE_OK) {
+            cerr << "SQLError: varlbl bind failed: " << sqlite3_errmsg(db) << endl;
+            return false;
+        }
+        
+        rc =  sqlite3_step(stmt);
+
+        if( rc != SQLITE_DONE )
+        {
+            cerr << "SQL error: "  << sqlite3_errmsg(db) << endl;
+            return false;
+        }
+                    
+        sqlite3_clear_bindings(stmt);    /* Clear bindings */
+        sqlite3_reset(stmt);
+    
+
     }  
+
+    sqlite3_exec(db, "END TRANSACTION", NULL, NULL, &zErrMsg);
+
   
     rc = sqlite3_exec(db,  "create table vardata ("
                            "obs integer,"
@@ -80,8 +123,6 @@ bool SQLite::write(Context & ctx) {
 
     sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &zErrMsg);
 
-    
-    sqlite3_stmt *stmt = NULL;
     rc = sqlite3_prepare_v2(db, "INSERT INTO VARDATA ( OBS, VARPOS, VALUE, SIZER ) VALUES ( ?, ?, ?, ? )", -1, &stmt, NULL);
     
     if (rc != SQLITE_OK) {
